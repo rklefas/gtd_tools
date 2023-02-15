@@ -75,10 +75,17 @@ def sortfile(dircheck, file):
 
 	debug_print("in sortfile")
 	
-	lineitem("File", file.replace(dircheck, ""))
-	input("  Where should this go? ")
+	folder = input(file.replace(dircheck, "")+" >>> What is the next action? ")
 
+	if folder != '':
+		newpath = dircheck + '/next action to ' + folder
 		
+		if not os.path.exists(newpath):
+			os.makedirs(newpath)
+
+		os.rename(file, file.replace(dircheck, newpath))
+
+
 def lineitem(key, value):
 	key = key + ":"
 	print(key.ljust(15, " ") + value)
