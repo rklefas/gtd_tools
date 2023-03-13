@@ -1,5 +1,8 @@
 import glob
 import os
+import pathlib
+from PIL import Image
+
 
 def debug_print(message):
 	print(message + " [DEBUGGING]")
@@ -14,18 +17,31 @@ def pickfolder(starting):
 
 		picked = None
 		folders = 0
+		files = 0
 		lineitem("Folder " + str(folders), "..")
 
 		for file in glob.glob(dircheck+"/*"):
-				
+		
+			if os.path.isfile(file):
+				files = files + 1
+
 			if os.path.isdir(file):
 				folders = folders + 1
 				lineitem("Folder " + str(folders), file.replace(dircheck, ""))
-				
+		
 		lineitem("Currently in", os.path.abspath(dircheck))
+		
+		if files > 0:
+			lineitem("Folder 99", "Sort current folder with " + str(files) + " files")
 
 		if picked == None:
-			picked = int(input("  Which folder do you want to enter? "))
+		
+			tmp = input("  Which folder do you want to enter? ")
+			
+			if tmp == '..':
+				picked = 0
+			else:
+				picked = int(tmp)
 
 		folders = 0
 
@@ -67,7 +83,8 @@ def sortfolder(dircheck):
 	if (files > 0):
 		for file in glob.glob(dircheck+"/*"):	
 			if os.path.isfile(file):
-				sortfile(dircheck, file)
+				if sortfile(dircheck, file) == 'exit':
+					break
 
 
 
@@ -75,16 +92,34 @@ def sortfile(dircheck, file):
 
 	debug_print("in sortfile")
 	
-	folder = input(file.replace(dircheck, "")+" >>> What is the next action? ")
-
+	file_extension = pathlib.Path(file).suffix.upper()
+	
+	if file_extension == '.PNG' or file_extension == '.JPG':
+		print("Opening image to preview: ", file)
+		Image.open(file).show()
+	
+	folder = input(file.replace(dircheck, "")+" >>> Is this (a)ctionable, (r)eference, or are you (n)ot sure? ")
+	
+	if folder == 'exit':
+		return folder
+		
 	if folder != '':
-		newpath = dircheck + '/next action to ' + folder
+		
+		if folder == 'a':
+			folder = 'actionable'
+		elif folder == 'r':
+			folder = 'reference'
+		elif folder == 'n':
+			folder = 'not sure'
+			
+		newpath = dircheck + '/is ' + folder
 		
 		if not os.path.exists(newpath):
 			os.makedirs(newpath)
 
 		os.rename(file, file.replace(dircheck, newpath))
 
+	return 'moved to ' + folder
 
 def lineitem(key, value):
 	key = key + ":"
