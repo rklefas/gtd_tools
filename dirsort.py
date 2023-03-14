@@ -5,7 +5,10 @@ from PIL import Image
 
 
 def debug_print(message):
+	print("")
 	print(message + " [DEBUGGING]")
+	print("")
+
 
 def pickfolder(starting):
 
@@ -96,9 +99,19 @@ def sortfile(dircheck, file):
 	
 	if file_extension == '.PNG' or file_extension == '.JPG':
 		print("Opening image to preview: ", file)
-		Image.open(file).show()
+		
+		try:
+			Image.open(file).show()
+		except:
+			print('Exception opening file')
+			
 	
-	folder = input(file.replace(dircheck, "")+" >>> Is this (a)ctionable, (r)eference, or are you (n)ot sure? ")
+	print("  (a)ctionable this year")
+	print("  (s)omeday")
+	print("  (r)eference")
+	print("  (n)ot sure")
+
+	folder = input(file.replace(dircheck, "")+" >>> When actionable? [a s r n]")
 	
 	if folder == 'exit':
 		return folder
@@ -107,6 +120,8 @@ def sortfile(dircheck, file):
 		
 		if folder == 'a':
 			folder = 'actionable'
+		elif folder == 's':
+			folder = 'someday'
 		elif folder == 'r':
 			folder = 'reference'
 		elif folder == 'n':
@@ -130,15 +145,15 @@ def confirmation(message):
 	input("*** " + message)
 	
 
+dircheck = "."
+
 while True:
 
 	debug_print("in main loop")
-	print("")
-	print("")
-	dircheck = input("What directory should we start with? ")
-	
+		
+	dircheck = pickfolder(dircheck)
+
 	if dircheck == 'exit':
 		break
-	
-	dircheck = pickfolder(dircheck)
+		
 	sortfolder(dircheck)
