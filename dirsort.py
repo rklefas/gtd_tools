@@ -11,19 +11,33 @@ def debug_print(message):
 	print("")
 
 
+def preview_file(fname):
+
+	file_extension = pathlib.Path(fname).suffix.upper()
+	
+	if file_extension == '.PNG' or file_extension == '.JPG':
+		print("Opening image to preview: ", fname)
+		
+		try:
+			Image.open(fname).show()
+		except:
+			print('Exception opening file')
+
+
+
 def pickfolder(starting):
 
 	debug_print("in pickfolder")
 
-	dircheck = starting
+	dircheck = os.path.abspath(starting)
 	
 	while True:
 
 		picked = None
 		folders = 0
 		files = 0
-		lineitem("Currently in", os.path.abspath(dircheck))
-		lineitem("Action " + str(folders), "..")
+		lineitem("Currently in", dircheck)
+		lineitem("Browse " + str(folders), "..")
 
 		for file in glob.glob(dircheck+"/*"):
 		
@@ -32,11 +46,11 @@ def pickfolder(starting):
 
 			if os.path.isdir(file):
 				folders = folders + 1
-				lineitem("Action " + str(folders), file.replace(dircheck, ""))
+				lineitem("Browse " + str(folders), file.replace(dircheck, ""))
 		
 		if files > 0:
 			lineitem("", " ")
-			lineitem("Action 99", "Sort " + str(files) + " files!")
+			lineitem(".", "Sort " + str(files) + " files!")
 			lineitem("", " ")
 
 		if picked == None:
@@ -45,6 +59,8 @@ def pickfolder(starting):
 			
 			if tmp == '..':
 				picked = 0
+			elif tmp == '.':
+				picked = 999
 			else:
 				try:
 					picked = int(tmp)
@@ -53,9 +69,8 @@ def pickfolder(starting):
 
 		folders = 0
 
-		if picked == 99:
-			dircheck = os.path.abspath(dircheck)
-			return dircheck
+		if picked == 999:
+			return os.path.abspath(dircheck)
 		elif picked == 0:
 			dircheck = os.path.abspath(dircheck+"/..")
 		else:
@@ -99,16 +114,7 @@ def sortfile(dircheck, file):
 
 	debug_print("in sortfile")
 	
-	file_extension = pathlib.Path(file).suffix.upper()
-	
-	if file_extension == '.PNG' or file_extension == '.JPG':
-		print("Opening image to preview: ", file)
-		
-		try:
-			Image.open(file).show()
-		except:
-			print('Exception opening file')
-			
+	preview_file(file)
 	
 	lineitem("File", file.replace(dircheck, ""))
 	lineitem("options", "exit, open")
@@ -118,6 +124,7 @@ def sortfile(dircheck, file):
 	lineitem("", "(n)ot sure")
 
 	folder = input("  >>> When actionable? [a s r n] ")
+	
 	
 	if folder == 'exit':
 		return folder
@@ -155,7 +162,12 @@ def confirmation(message):
 	input("*** " + message)
 	
 
-dircheck = "."
+dircheck = input("Which drive letter to start with? ").strip()
+
+if dircheck == '' or dircheck == '.':
+	dircheck = '.'
+else:
+	dircheck = dircheck + ':'
 
 while True:
 
