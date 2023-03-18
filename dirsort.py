@@ -17,23 +17,36 @@ def preview_file(fname):
 
 	debug_print("in preview_file")
 
-	file_extension = pathlib.Path(fname).suffix.upper()
+	exten = pathlib.Path(fname).suffix.strip(".").upper()
 	
-	if file_extension == '.PNG' or file_extension == '.JPG':
+	if exten == 'PNG' or exten == 'JPG':
 		print("Opening IMAGE to preview: ", fname)
-		
 		try:
 			Image.open(fname).show()
 		except:
 			print('Exception opening file')
 			
-	elif file_extension == '.MP3':
+	elif exten == 'MP3':
+	
+		if os.path.getsize(fname) > 200000:
+			print("Too big to open")
+			return
+	
 		print("Opening AUDIO to preview: ", fname)
 		
 		try:
 			playsound(fname)
 		except:
 			print('Exception opening file')
+			
+	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY':
+	
+		f = open(fname, "r")
+		for x in f:
+			print(x.rstrip())
+			sleep(0.2)
+	else:
+		print(exten, ' extension cannot be previewed')
 
 
 
@@ -62,7 +75,8 @@ def pickfolder(starting):
 		
 		if files > 0:
 			lineitem("", " ")
-			lineitem(".", "Sort " + str(files) + " files!")
+			lineitem("sort", "Sort " + str(files) + " files!")
+			lineitem("melt", "Melt " + str(files) + " files!")
 			lineitem("", " ")
 
 		if picked == None:
@@ -70,10 +84,12 @@ def pickfolder(starting):
 			tmp = input("Which folder do you want to enter? ")
 			
 			if tmp == 'exit':
-				return 'exit'
+				return {"action" : "exit"}
 			elif tmp == '..':
 				picked = 0
-			elif tmp == '.':
+			elif tmp == 'melt':
+				picked = 998
+			elif tmp == 'sort':
 				picked = 999
 			else:
 				try:
@@ -84,7 +100,9 @@ def pickfolder(starting):
 		folders = 0
 
 		if picked == 999:
-			return os.path.abspath(dircheck)
+			return {"action" : "sort", "folder" : os.path.abspath(dircheck)}
+		elif picked == 998:
+			return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
 		elif picked == 0:
 			dircheck = os.path.abspath(dircheck+"/..")
 		else:
@@ -95,12 +113,13 @@ def pickfolder(starting):
 						dircheck = os.path.abspath(file)
 
 		
-def sortfolder(dircheck):
+def sortfolder(response):
 
 	debug_print("in sortfolder")
 	
 	files = 0
 	folders = 0
+	dircheck = response["folder"]
 
 	for file in glob.glob(dircheck+"/*"):
 	
@@ -114,22 +133,37 @@ def sortfolder(dircheck):
 	lineitem("Directory", os.path.abspath(dircheck))
 	lineitem("  Files", str(files))	
 	
-	for file in glob.glob(dircheck+"/*"):	
-		if os.path.isfile(file):
-		
-			lineitem("Directory", os.path.abspath(dircheck))
-			lineitem("  Files", str(files))
+	if response["action"] == 'sort':
+		for file in glob.glob(dircheck+"/*"):
+			if os.path.isfile(file):
+			
+				lineitem("Directory", os.path.abspath(dircheck))
+				lineitem("  Files", str(files))
 				
-			if sortfile(dircheck, file) == 'exit':
-				break
+				fresponse = sortfile(response, file)
+				
+				if fresponse["action"] == 'exit':
+					break
+				elif fresponse["action"] == 'moved':
+					print(fresponse)
+					
+	elif response["action"] == 'melt':
+		for file in glob.glob(dircheck+"/*"):
+			movefile(file, pathlib.Path(file).parent.parent)
+			print(response)
+
+		os.rmdir(dircheck)
 
 
+def sortfile(response, file):
 
-def sortfile(dircheck, file):
+	dircheck = response["folder"]
 
 	debug_print("in sortfile")
 	
 	lineitem("File", pathlib.Path(file).name)
+	lineitem("Size", str(os.path.getsize(file)))
+	
 	lineitem("options", "exit, open")
 	lineitem("", "(q)ctionable this quarter")
 	lineitem("", "(a)ctionable this year")
@@ -143,12 +177,12 @@ def sortfile(dircheck, file):
 	
 	if folder == 'open':
 		preview_file(file)
-		return sortfile(dircheck, file)
+		return sortfile(response, file)
 	elif folder == 'exit':
-		return folder
+		return {"action" : "exit"}
 	elif folder != '':
 		
-		if folder == 'a':
+		if folder == 'q':
 			folder = 'is actionable this quarter'
 		elif folder == 'a':
 			folder = 'is actionable'
@@ -168,9 +202,12 @@ def sortfile(dircheck, file):
 		if not os.path.exists(newpath):
 			os.makedirs(newpath)
 
-		os.rename(file, file.replace(dircheck, newpath))
-		return 'moved to ' + folder
-
+		movefile(file, newpath)
+		return {"action": "moved", "folder": folder, "file": file}
+	else:
+		return {"action" : "", "folder" : folder}
+		
+		
 def lineitem(key, value):
 
 	if len(key) > 0:
@@ -184,6 +221,13 @@ def confirmation(message):
 	input("*** " + message)
 	
 
+def movefile(current, dest):
+	dest = str(dest) + "/" + pathlib.Path(current).name
+	os.rename(current, dest)
+	lineitem('Current', current)
+	lineitem('Destination', dest)
+	
+
 dircheck = input("Which drive letter to start with? ").strip()
 
 if dircheck == '' or dircheck == '.':
@@ -195,11 +239,11 @@ while True:
 
 	debug_print("in main loop")
 		
-	dircheck = pickfolder(dircheck)
+	response = pickfolder(dircheck)
 
-	if dircheck == 'exit':
+	if response["action"] == 'exit':
 		print('Exiting now')
 		sleep(2)
 		break
 		
-	sortfolder(dircheck)
+	sortfolder(response)
