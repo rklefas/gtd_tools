@@ -44,7 +44,7 @@ def preview_file(fname):
 		f = open(fname, "r")
 		for x in f:
 			print(x.rstrip())
-			sleep(0.2)
+			sleep(0.1)
 	else:
 		print(exten, ' extension cannot be previewed')
 
@@ -72,25 +72,32 @@ def pickfolder(starting):
 			if os.path.isdir(file):
 				folders = folders + 1
 				lineitem("  Browse " + str(folders), pathlib.Path(file).stem)
+				
+				if folders % 20 == 0:
+					sleep(3)
+
 		
 		if files > 0:
-			lineitem("", " ")
-			lineitem("sort", "Sort " + str(files) + " files!")
-			lineitem("melt", "Melt " + str(files) + " files!")
-			lineitem("", " ")
+			lineitem("", "---------------------------")
+			lineitem("  list", "List " + str(files) + " files!")
+			lineitem("  sort", "Sort " + str(files) + " files!")
+			lineitem("  melt", "Melt this folder!")
+			lineitem("", "---------------------------")
 
 		if picked == None:
 		
-			tmp = input("Which folder do you want to enter? ")
+			tmp = folderquery("Which folder do you want to enter? ")
 			
 			if tmp == 'exit':
 				return {"action" : "exit"}
 			elif tmp == '..':
 				picked = 0
+			elif tmp == 'list':
+				return {"action" : "list", "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'melt':
-				picked = 998
+				return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
-				picked = 999
+				return {"action" : "sort", "folder" : os.path.abspath(dircheck)}
 			else:
 				try:
 					picked = int(tmp)
@@ -99,11 +106,7 @@ def pickfolder(starting):
 
 		folders = 0
 
-		if picked == 999:
-			return {"action" : "sort", "folder" : os.path.abspath(dircheck)}
-		elif picked == 998:
-			return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
-		elif picked == 0:
+		if picked == 0:
 			dircheck = os.path.abspath(dircheck+"/..")
 		else:
 			for file in glob.glob(dircheck+"/*"):	
@@ -131,7 +134,6 @@ def sortfolder(response):
 #			lineitem("Folder", file)
 
 	lineitem("Directory", os.path.abspath(dircheck))
-	lineitem("  Files", str(files))	
 	
 	if response["action"] == 'sort':
 		for file in glob.glob(dircheck+"/*"):
@@ -147,7 +149,22 @@ def sortfolder(response):
 				elif fresponse["action"] == 'moved':
 					print(fresponse)
 					
+	elif response["action"] == 'list':
+	
+		fileCount = 0
+	
+		for file in glob.glob(dircheck+"/*"):
+			if os.path.isfile(file):
+				fileCount = fileCount + 1
+				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
+				
+				if fileCount % 20 == 0:
+					sleep(3)
+				
+		confirmation("End of file list")
+				
 	elif response["action"] == 'melt':
+	
 		for file in glob.glob(dircheck+"/*"):
 			movefile(file, pathlib.Path(file).parent.parent)
 			print(response)
@@ -221,6 +238,19 @@ def confirmation(message):
 	input("*** " + message)
 	
 
+
+def folderquery(message):
+	entered = input(message)
+	
+	if entered == 'melt':
+		if input('Are you sure? (y/n) ') == 'y':
+			return entered
+	elif entered != '':
+		return entered
+		
+	return folderquery(message)
+
+
 def movefile(current, dest):
 	dest = str(dest) + "/" + pathlib.Path(current).name
 	os.rename(current, dest)
@@ -245,5 +275,7 @@ while True:
 		print('Exiting now')
 		sleep(2)
 		break
+	else:
+		dircheck = response["folder"]
 		
 	sortfolder(response)
