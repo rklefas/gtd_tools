@@ -3,7 +3,7 @@ import os
 import pathlib
 from time import sleep
 from PIL import Image
-from playsound import playsound
+import pygame
 
 
 def debug_print(message):
@@ -27,15 +27,26 @@ def preview_file(fname):
 			print('Exception opening file')
 			
 	elif exten == 'MP3':
-	
-		if os.path.getsize(fname) > 200000:
-			print("Too big to open")
-			return
-	
-		print("Opening AUDIO to preview: ", fname)
+			
+		print("Opening AUDIO to preview: ")
+		print(" ", fname)
 		
 		try:
-			playsound(fname)
+		
+			pygame.mixer.init()  # initialize mixer module
+			pygame.mixer.music.load(fname)
+			pygame.mixer.music.play()
+
+			confirmation("Press enter to stop")
+			
+			pygame.mixer.music.stop()
+			pygame.mixer.music.unload()
+		
+	#		p = vlc.MediaPlayer(fname)
+	#		p.play()
+	#		time.sleep(4)
+	#		p.stop()
+
 		except:
 			print('Exception opening file')
 			
@@ -165,9 +176,12 @@ def sortfolder(response):
 				
 	elif response["action"] == 'melt':
 	
+		print(response)
+	
 		for file in glob.glob(dircheck+"/*"):
 			movefile(file, pathlib.Path(file).parent.parent)
-			print(response)
+
+		confirmation("Folder will be deleted: " + dircheck)
 
 		os.rmdir(dircheck)
 
@@ -181,7 +195,7 @@ def sortfile(response, file):
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
 	
-	lineitem("options", "exit, open")
+	lineitem("options", "exit, open, append")
 	lineitem("", "(q)ctionable this quarter")
 	lineitem("", "(a)ctionable this year")
 	lineitem("", "(s)omeday")
@@ -195,6 +209,18 @@ def sortfile(response, file):
 	if folder == 'open':
 		preview_file(file)
 		return sortfile(response, file)
+	elif folder == 'append':
+	
+		appending = input('What should we append to the file name? ')
+	
+		dest = pathlib.Path(file)
+		dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
+		
+		os.rename(file, dest)
+		lineitem('New Name', dest)
+		sleep(5)
+		
+		return sortfile(response, dest)
 	elif folder == 'exit':
 		return {"action" : "exit"}
 	elif folder != '':
