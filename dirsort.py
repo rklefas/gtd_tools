@@ -1,10 +1,21 @@
+from datetime import datetime
 import glob
 import os
 import pathlib
 from time import sleep
 from PIL import Image
+from playsound import playsound
 import pygame
+import vlc
 
+
+
+def do_log(message):
+	dateX = datetime.now().strftime("%Y-%m-%d")
+	timeX = datetime.now().strftime(" %H:%M:%S")
+	file1 = open(dateX + "-moved.log", "a")
+	file1.write(dateX + timeX + " " + message + "\n")
+	file1.close()
 
 def debug_print(message):
 	print("")
@@ -23,16 +34,17 @@ def preview_file(fname):
 		print("Opening IMAGE to preview: ", fname)
 		try:
 			Image.open(fname).show()
-		except:
+		except Exception as e: 
 			print('Exception opening file')
+			print(e)
 			
 	elif exten == 'MP3':
 			
-		print("Opening AUDIO to preview: ")
-		print(" ", fname)
-		
 		try:
 		
+			print("Opening AUDIO with pygame: ")
+			print(" ", fname)
+			
 			pygame.mixer.init()  # initialize mixer module
 			pygame.mixer.music.load(fname)
 			pygame.mixer.music.play()
@@ -42,13 +54,38 @@ def preview_file(fname):
 			pygame.mixer.music.stop()
 			pygame.mixer.music.unload()
 		
-	#		p = vlc.MediaPlayer(fname)
-	#		p.play()
-	#		time.sleep(4)
-	#		p.stop()
+			return
 
-		except:
-			print('Exception opening file')
+		except Exception as e: 
+			print('Exception opening file with pygame')
+			print(e)
+			
+		try:
+		
+			print("Opening AUDIO with playsound: ")
+			print(" ", fname)
+
+			playsound(fname)
+			
+			return
+		except Exception as e: 
+			print('Exception opening file with playsound')
+			print(e)
+			
+		try:
+		
+			print("Opening AUDIO with vlc: ")
+			print(" ", fname)
+
+			p = vlc.MediaPlayer(fname)
+			p.play()
+			p.stop()
+			
+			return
+		except Exception as e: 
+			print('Exception opening file with vlc')
+			print(e)
+
 			
 	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY':
 	
@@ -126,23 +163,32 @@ def pickfolder(starting):
 					if folders == picked:
 						dircheck = os.path.abspath(file)
 
-		
-def sortfolder(response):
 
-	debug_print("in sortfolder")
-	
+
+def foldersummary(dircheck):
+
 	files = 0
 	folders = 0
-	dircheck = response["folder"]
+	size = 0
 
 	for file in glob.glob(dircheck+"/*"):
 	
 		if os.path.isfile(file):
 			files = files + 1
-#			lineitem("File", file.replace(dircheck, ""))
+			size = size + os.path.getsize(file)
 		else:
 			folders = folders + 1
-#			lineitem("Folder", file)
+
+	return {"path": dircheck, "files": files, "folders": folders, "size": size}
+
+
+def sortfolder(response):
+
+	debug_print("in sortfolder")
+	
+	dircheck = response["folder"]
+	summary = foldersummary(dircheck)
+	files = summary["files"]
 
 	lineitem("Directory", os.path.abspath(dircheck))
 	
@@ -157,8 +203,6 @@ def sortfolder(response):
 				
 				if fresponse["action"] == 'exit':
 					break
-				elif fresponse["action"] == 'moved':
-					print(fresponse)
 					
 	elif response["action"] == 'list':
 	
@@ -186,6 +230,23 @@ def sortfolder(response):
 		os.rmdir(dircheck)
 
 
+def printmap(map):
+	for key in map:
+		lineitem(key, map[key])
+		
+	return input('>>> Put in subfolder? ')
+
+
+def foldermap(map, index):
+
+	value = map.get(index)
+	
+	if value != '' and value != None:
+		return value
+		
+	return index
+
+
 def sortfile(response, file):
 
 	dircheck = response["folder"]
@@ -195,7 +256,7 @@ def sortfile(response, file):
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
 	
-	lineitem("options", "exit, open, append")
+	lineitem("options", "exit, (o)pen, append")
 	lineitem("", "(q)ctionable this quarter")
 	lineitem("", "(a)ctionable this year")
 	lineitem("", "(s)omeday")
@@ -206,7 +267,7 @@ def sortfile(response, file):
 
 	folder = input(">>> When actionable? [q/a/s/r/c/t/n] ")
 	
-	if folder == 'open':
+	if folder == 'open' or folder == 'o':
 		preview_file(file)
 		return sortfile(response, file)
 	elif folder == 'append':
@@ -225,14 +286,37 @@ def sortfile(response, file):
 		return {"action" : "exit"}
 	elif folder != '':
 		
+		actmap = {"b":"books", "bs": "buy at store", "bo": "buy online", "ed": "education", "e":"events", "p":"places", "r": "read", "w": "watch", "c": "research at computer"}
+		
 		if folder == 'q':
 			folder = 'is actionable this quarter'
+			
+			subfolder = printmap(actmap)
+				
+			if subfolder != '':
+				folder = folder + '/' + foldermap(actmap, subfolder)
+
 		elif folder == 'a':
 			folder = 'is actionable'
+			
+			subfolder = printmap(actmap)
+				
+			if subfolder != '':
+				folder = folder + '/' + foldermap(actmap, subfolder)
+
 		elif folder == 's':
 			folder = 'is someday'
 		elif folder == 'r':
+		
 			folder = 'is reference'
+			
+			map = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space"}
+			
+			subfolder = printmap(map)
+			
+			if subfolder != '':
+				folder = folder + '/' + foldermap(map, subfolder)
+
 		elif folder == 'n':
 			folder = 'is not sure'
 		elif folder == 'c':
@@ -244,7 +328,7 @@ def sortfile(response, file):
 		
 		if not os.path.exists(newpath):
 			os.makedirs(newpath)
-
+			
 		movefile(file, newpath)
 		return {"action": "moved", "folder": folder, "file": file}
 	else:
@@ -280,6 +364,10 @@ def folderquery(message):
 def movefile(current, dest):
 	dest = str(dest) + "/" + pathlib.Path(current).name
 	os.rename(current, dest)
+	
+	do_log('BEFORE ' + current)
+	do_log('AFTER  ' + dest)
+	
 	lineitem('Current', current)
 	lineitem('Destination', dest)
 	
