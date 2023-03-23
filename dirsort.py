@@ -226,7 +226,12 @@ def sortfolder(response):
 
 		confirmation("Folder will be deleted: " + dircheck)
 
-		os.rmdir(dircheck)
+		try:
+			os.rmdir(dircheck)
+		except Exception as e: 
+			print(e)
+
+
 
 
 
@@ -372,13 +377,18 @@ def folderquery(message):
 
 def movefile(current, dest):
 	dest = str(dest) + "/" + pathlib.Path(current).name
-	os.rename(current, dest)
 	
-	do_log('BEFORE ' + current)
-	do_log('AFTER  ' + dest)
-	
-	lineitem('Current', current)
-	lineitem('Destination', dest)
+	try:
+		os.rename(current, dest)
+		
+		do_log('BEFORE ' + current)
+		do_log('AFTER  ' + dest)
+		
+		lineitem('Current', current)
+		lineitem('Destination', dest)
+	except Exception as e: 
+		print(e)
+
 	
 
 dircheck = input("Which drive letter to start with? ").strip()
