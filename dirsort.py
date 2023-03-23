@@ -229,21 +229,27 @@ def sortfolder(response):
 		os.rmdir(dircheck)
 
 
-def printmap(map):
+
+def easyoptions(map, question):
 	for key in map:
 		lineitem(key, map[key])
-		
-	return input('>>> Put in subfolder? ')
-
-
-def foldermap(map, index):
-
-	value = map.get(index)
+	
+	lineitem('other', 'enter a custom value not listed')
+	inputx = input(question)
+	
+	if inputx == '':
+		return inputx
+	
+	if inputx == 'other':
+		return input('What custom value do you want? ')
+	
+	value = map.get(inputx)
 	
 	if value != '' and value != None:
 		return value
-		
-	return index
+
+	return easyoptions(map, question)
+
 
 
 def sortfile(response, file):
@@ -255,8 +261,8 @@ def sortfile(response, file):
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
 	
-	lineitem("options", "exit, (o)pen, append")
-	lineitem("", "(q)ctionable this quarter")
+	lineitem("options", "exit, (o)pen")
+	lineitem("", "actionable this (q)uarter")
 	lineitem("", "(a)ctionable this year")
 	lineitem("", "(s)omeday")
 	lineitem("", "(r)eference")
@@ -268,19 +274,19 @@ def sortfile(response, file):
 	
 	if folder == 'open' or folder == 'o':
 		preview_file(file)
-		return sortfile(response, file)
-	elif folder == 'append':
-	
-		appending = input('What should we append to the file name? ')
-	
-		dest = pathlib.Path(file)
-		dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
 		
-		os.rename(file, dest)
-		lineitem('New Name', dest)
-		sleep(5)
-		
-		return sortfile(response, dest)
+		appending = input('What should we append to the file name to describe it? ')
+	
+		if appending != '':
+			dest = pathlib.Path(file)
+			dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
+			os.rename(file, dest)
+			lineitem('New Name', dest)
+			sleep(3)
+			return sortfile(response, dest)
+		else:
+			return sortfile(response, file)
+			
 	elif folder == 'exit':
 		return {"action" : "exit"}
 	elif folder != '':
@@ -290,18 +296,18 @@ def sortfile(response, file):
 		if folder == 'q':
 			folder = 'is actionable this quarter'
 			
-			subfolder = printmap(actmap)
+			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
 				
 			if subfolder != '':
-				folder = folder + '/' + foldermap(actmap, subfolder)
+				folder = folder + '/' + subfolder
 
 		elif folder == 'a':
 			folder = 'is actionable'
 			
-			subfolder = printmap(actmap)
+			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
 				
 			if subfolder != '':
-				folder = folder + '/' + foldermap(actmap, subfolder)
+				folder = folder + '/' + subfolder
 
 		elif folder == 's':
 			folder = 'is someday'
@@ -309,12 +315,12 @@ def sortfile(response, file):
 		
 			folder = 'is reference'
 			
-			map = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space"}
+			refmap = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space", "p": "photos"}
 			
-			subfolder = printmap(map)
-			
+			subfolder = easyoptions(refmap, 'Choose a subfolder: ')
+				
 			if subfolder != '':
-				folder = folder + '/' + foldermap(map, subfolder)
+				folder = folder + '/' + subfolder
 
 		elif folder == 'n':
 			folder = 'is not sure'
