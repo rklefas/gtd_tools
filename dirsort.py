@@ -108,27 +108,26 @@ def pickfolder(starting):
 
 		picked = None
 		folders = 0
-		files = 0
 		lineitem("Currently in", dircheck)
 		lineitem("  Browse " + str(folders), "..")
 
-		for file in glob.glob(dircheck+"/*"):
-		
-			if os.path.isfile(file):
-				files = files + 1
+		topSummary = foldersummary(dircheck)
 
+		for file in glob.glob(dircheck+"/*"):
 			if os.path.isdir(file):
+			
+				thisSummary = foldersummary(file)				
 				folders = folders + 1
-				lineitem("  Browse " + str(folders), pathlib.Path(file).stem)
+				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, "Folders: " + str(thisSummary["folders"]), "Files: " + str(thisSummary["files"]))
 				
-				if folders % 20 == 0:
+				if folders % 20 == 0 and folders < 100:
 					sleep(3)
 
 		
-		if files > 0:
+		if topSummary["files"] > 0:
 			lineitem("", "---------------------------")
-			lineitem("  list", "List " + str(files) + " files!")
-			lineitem("  sort", "Sort " + str(files) + " files!")
+			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
+			lineitem("  sort", "Sort " + str(topSummary["files"]) + " files!")
 			lineitem("  melt", "Melt this folder!")
 			lineitem("", "---------------------------")
 
@@ -286,7 +285,7 @@ def sortfile(response, file):
 		return {"action" : "exit"}
 	elif folder != '':
 		
-		actmap = {"b":"books", "bs": "buy at store", "bo": "buy online", "ed": "education", "e":"events", "p":"places", "r": "read", "w": "watch", "c": "research at computer"}
+		actmap = {"b":"books", "bs": "buy at store", "bo": "buy online", "ed": "education", "e":"events", "p":"places", "r": "read", "w": "watch", "c": "research at computer", "wr": "write to list"}
 		
 		if folder == 'q':
 			folder = 'is actionable this quarter'
@@ -342,6 +341,10 @@ def lineitem(key, value):
 		
 	print(key.ljust(15, " ") + value)
 	sleep(0.05)
+
+
+def longerlineitem(key, val1, val2, val3):
+	lineitem(key, val1.ljust(30, " ") + val2.ljust(15, " ") + val3.ljust(10, " "))
 
 
 def confirmation(message):
