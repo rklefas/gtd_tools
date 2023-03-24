@@ -98,6 +98,20 @@ def preview_file(fname):
 
 
 
+def getfolders(dircheck):
+
+	golist = {"0": ".."}
+
+	folders = 0
+
+	for file in glob.glob(dircheck+"/*"):
+		if os.path.isdir(file):
+			folders = folders + 1
+			golist[str(folders)] = pathlib.Path(file).stem
+
+	return golist
+
+
 def pickfolder(starting):
 
 	debug_print("in pickfolder")
@@ -296,11 +310,24 @@ def sortfile(response, file):
 		return {"action" : "exit"}
 	elif folder != '':
 		
-		actmap = {"b":"books", "bs": "buy at store", "bo": "buy online", "ed": "education", "e":"events", "p":"places", "r": "read", "w": "watch", "c": "research at computer", "wr": "write to list"}
+		actmap = {"b":"books"}
+		actmap["bs"] = "buy at store"
+		actmap["bo"] = "buy online"
+		actmap["ed"] = "education-classes"
+		actmap["e"] = "events"
+		actmap["p"] = "places"
+		actmap["r"] = "read"
+		actmap["re"] = "recipe"
+		actmap["w"] = "watch"
+		actmap["c"] = "research at computer"
+		actmap["wr"] = "write to list"
+		actmap["me"] = "find an outlet for media"
+		
 		
 		if folder == 'q':
 			folder = 'is actionable this quarter'
 			
+			actmap.update(getfolders(dircheck + '/' + folder))
 			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
 				
 			if subfolder != '':
@@ -309,6 +336,7 @@ def sortfile(response, file):
 		elif folder == 'a':
 			folder = 'is actionable'
 			
+			actmap.update(getfolders(dircheck + '/' + folder))
 			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
 				
 			if subfolder != '':
@@ -321,6 +349,8 @@ def sortfile(response, file):
 			folder = 'is reference'
 			
 			refmap = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space", "p": "photos"}
+
+			refmap.update(getfolders(dircheck + '/' + folder))
 			
 			subfolder = easyoptions(refmap, 'Choose a subfolder: ')
 				
