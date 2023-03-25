@@ -31,7 +31,7 @@ def preview_file(fname):
 
 	exten = pathlib.Path(fname).suffix.strip(".").upper()
 	
-	if exten == 'PNG' or exten == 'JPG':
+	if exten == 'PNG' or exten == 'JPG' or exten == 'JPEG':
 		print("Opening IMAGE to preview: ", fname)
 		try:
 			Image.open(fname).show()
@@ -88,7 +88,7 @@ def preview_file(fname):
 			print(e)
 
 			
-	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY':
+	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY' or exten == 'LOG':
 	
 		f = open(fname, "r")
 		for x in f:
@@ -325,15 +325,7 @@ def sortfile(response, file):
 		actmap["w"] = "watch"
 		actmap["wr"] = "write to list"		
 		
-		if folder == 'is actionable this quarter':
-			
-			actmap.update(getfolders(dircheck + '/' + folder))
-			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
-				
-			if subfolder != '':
-				folder = folder + '/' + subfolder
-
-		elif folder == 'is actionable this year':
+		if folder == 'is actionable this quarter' or folder == 'is actionable this year' or folder == 'is someday':
 			
 			actmap.update(getfolders(dircheck + '/' + folder))
 			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
@@ -398,7 +390,7 @@ def movefile(current, dest):
 	
 	try:
 		if os.path.isdir(dest):
-			dest = dest + '-resolved-conflict-' + str(random.randrange(1000,9999))
+			dest = dest + '/' + pathlib.Path(current).name + '-conflict-' + str(random.randrange(1000,9999))
 
 		lineitem('Current', current)
 		lineitem('Destination', dest)
