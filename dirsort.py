@@ -7,6 +7,7 @@ from PIL import Image
 from playsound import playsound
 import pygame
 import vlc
+import random
 
 
 
@@ -279,19 +280,20 @@ def sortfile(response, file):
 	
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
-	
-	lineitem("options", "exit, (o)pen")
-	lineitem("", "actionable this (q)uarter")
-	lineitem("", "(a)ctionable this year")
-	lineitem("", "(s)omeday")
-	lineitem("", "(r)eference")
-	lineitem("", "(c)ompleted")
-	lineitem("", "(t)rash")
-	lineitem("", "(n)ot sure")
+		
+	rootmap = {"q":"is actionable this quarter"}
+	rootmap["a"] = "is actionable this year"
+	rootmap["s"] = "is someday"
+	rootmap["r"] = "is reference"
+	rootmap["c"] = "is completed"
+	rootmap["t"] = "is trash"
+	rootmap["n"] = "is not sure"
+	rootmap["o"] = "open"
+	rootmap["exit"] = "exit"
 
-	folder = input(">>> When actionable? [q/a/s/r/c/t/n] ")
+	folder = easyoptions(rootmap, 'What timeframe? ')
 	
-	if folder == 'open' or folder == 'o':
+	if folder == 'open':
 		preview_file(file)
 		
 		appending = input('What should we append to the file name to describe it? ')
@@ -315,17 +317,15 @@ def sortfile(response, file):
 		actmap["bo"] = "buy online"
 		actmap["ed"] = "education-classes"
 		actmap["e"] = "events"
+		actmap["me"] = "find an outlet for media"
 		actmap["p"] = "places"
 		actmap["r"] = "read"
 		actmap["re"] = "recipe"
-		actmap["w"] = "watch"
 		actmap["c"] = "research at computer"
-		actmap["wr"] = "write to list"
-		actmap["me"] = "find an outlet for media"
+		actmap["w"] = "watch"
+		actmap["wr"] = "write to list"		
 		
-		
-		if folder == 'q':
-			folder = 'is actionable this quarter'
+		if folder == 'is actionable this quarter':
 			
 			actmap.update(getfolders(dircheck + '/' + folder))
 			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
@@ -333,8 +333,7 @@ def sortfile(response, file):
 			if subfolder != '':
 				folder = folder + '/' + subfolder
 
-		elif folder == 'a':
-			folder = 'is actionable'
+		elif folder == 'is actionable this year':
 			
 			actmap.update(getfolders(dircheck + '/' + folder))
 			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
@@ -342,12 +341,8 @@ def sortfile(response, file):
 			if subfolder != '':
 				folder = folder + '/' + subfolder
 
-		elif folder == 's':
-			folder = 'is someday'
-		elif folder == 'r':
+		elif folder == 'is reference':
 		
-			folder = 'is reference'
-			
 			refmap = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space", "p": "photos"}
 
 			refmap.update(getfolders(dircheck + '/' + folder))
@@ -356,13 +351,6 @@ def sortfile(response, file):
 				
 			if subfolder != '':
 				folder = folder + '/' + subfolder
-
-		elif folder == 'n':
-			folder = 'is not sure'
-		elif folder == 'c':
-			folder = 'is completed'
-		elif folder == 't':
-			folder = 'is trash'
 			
 		newpath = dircheck + '/' + folder
 		
@@ -409,13 +397,17 @@ def movefile(current, dest):
 	dest = str(dest) + "/" + pathlib.Path(current).name
 	
 	try:
+		if os.path.isdir(dest):
+			dest = dest + '-resolved-conflict-' + str(random.randrange(1000,9999))
+
+		lineitem('Current', current)
+		lineitem('Destination', dest)
+		
 		os.rename(current, dest)
 		
 		do_log('BEFORE ' + current)
 		do_log('AFTER  ' + dest)
 		
-		lineitem('Current', current)
-		lineitem('Destination', dest)
 	except Exception as e: 
 		print(e)
 
