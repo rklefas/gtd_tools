@@ -96,6 +96,21 @@ def preview_file(fname):
 			sleep(0.1)
 	else:
 		print(exten, ' extension cannot be previewed')
+		return fname
+		
+		
+	appending = input('What should we append to the file name to describe it? ')
+
+	if appending != '':
+		dest = pathlib.Path(fname)
+		dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
+		os.rename(fname, dest)
+		lineitem('New Name', dest)
+		sleep(2)
+		return dest
+	else:
+		return fname
+
 
 
 
@@ -281,6 +296,12 @@ def detecttimeframe(timeframes, file):
 	return None
 
 
+def makefolders(newpath):
+	if not os.path.exists(newpath):
+		os.makedirs(newpath)
+
+
+
 
 def sortfile(response, file):
 
@@ -302,35 +323,34 @@ def sortfile(response, file):
 	rootmap["o"] = "open"
 	rootmap["exit"] = "exit"
 
-
 	timeframefound = detecttimeframe(rootmap, file)
 	
 	if timeframefound is not None:
 		lineitem('Time frame', timeframefound)
-		folder = timeframefound
+		destfolder = timeframefound
+		newpath = dircheck
 	else:
-		folder = easyoptions(rootmap, 'What timeframe? ')
-	
-	if folder == 'open':
-		preview_file(file)
+		destfolder = easyoptions(rootmap, 'What timeframe? ')
+		newpath = dircheck + '/' + destfolder
 		
-		appending = input('What should we append to the file name to describe it? ')
+		if destfolder == 'open':
+			newfile = preview_file(file)
+			return sortfile(response, newfile)
+		elif destfolder == 'exit':
+			return {"action" : "exit"}
 	
-		if appending != '':
-			dest = pathlib.Path(file)
-			dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
-			os.rename(file, dest)
-			lineitem('New Name', dest)
-			sleep(3)
-			return sortfile(response, dest)
-		else:
-			return sortfile(response, file)
-			
-	elif folder == 'exit':
-		return {"action" : "exit"}
-	elif folder != '':
+		makefolders(newpath)
+		newfilelocation = movefile(file, newpath)
+
+	if destfolder == '':
+		return {"action" : "", "folder" : destfolder}
+
+	subfolder = ''
+	
+	if destfolder == 'is actionable this quarter' or destfolder == 'is actionable this year' or destfolder == 'is someday':
 		
-		actmap = {"b":"books"}
+		actmap = {"o":"open"}
+		actmap["b"] = "books"
 		actmap["bs"] = "buy at store"
 		actmap["bo"] = "buy online"
 		actmap["ed"] = "education-classes"
@@ -341,36 +361,35 @@ def sortfile(response, file):
 		actmap["re"] = "recipe"
 		actmap["c"] = "research at computer"
 		actmap["w"] = "watch"
-		actmap["wr"] = "write to list"		
-		
-		if folder == 'is actionable this quarter' or folder == 'is actionable this year' or folder == 'is someday':
-			
-			actmap.update(getfolders(dircheck + '/' + folder))
-			subfolder = easyoptions(actmap, 'Choose a subfolder: ')
-				
-			if subfolder != '':
-				folder = folder + '/' + subfolder
+		actmap["wr"] = "write to list"
+		actmap.update(getfolders(newpath))			
+		subfolder = easyoptions(actmap, 'Choose an action subfolder: ')
 
-		elif folder == 'is reference':
-		
-			refmap = {"h":"health", "f":"finances", "r":"relationships", "s":"spiritual", "l":"living-space", "p": "photos"}
+	elif destfolder == 'is reference':
+	
+		refmap = {"o": "open"}
+		refmap["f"] = "finances"
+		refmap["l"] = "living-space"
+		refmap["h"] = "health"
+		refmap["p"] = "photos"
+		refmap["r"] = "relationships"
+		refmap["s"] = "spiritual"
+		refmap.update(getfolders(newpath))
+		subfolder = easyoptions(refmap, 'Choose a reference subfolder: ')
 
-			refmap.update(getfolders(dircheck + '/' + folder))
 			
-			subfolder = easyoptions(refmap, 'Choose a subfolder: ')
-				
-			if subfolder != '':
-				folder = folder + '/' + subfolder
-			
-		newpath = dircheck + '/' + folder
+	if subfolder != '':
+	
+		if subfolder == 'open':
+			newfile = preview_file(file)
+			return sortfile(response, newfile)
+
+		newpath = newpath + '/' + subfolder
+		makefolders(newpath)
+		newfilelocation = movefile(file, newpath)
 		
-		if not os.path.exists(newpath):
-			os.makedirs(newpath)
-			
-		movefile(file, newpath)
-		return {"action": "moved", "folder": folder, "file": file}
-	else:
-		return {"action" : "", "folder" : folder}
+	return {"action": "moved", "folder": newpath, "file": file}
+
 		
 		
 def lineitem(key, value):
@@ -417,6 +436,8 @@ def movefile(current, dest):
 		
 		do_log('BEFORE ' + current)
 		do_log('AFTER  ' + dest)
+		
+		return dest
 		
 	except Exception as e: 
 		print(e)
