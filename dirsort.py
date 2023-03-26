@@ -54,38 +54,33 @@ def preview_file(fname):
 			
 			pygame.mixer.music.stop()
 			pygame.mixer.music.unload()
-		
-			return
 
 		except Exception as e: 
 			print('Exception opening file with pygame')
 			print(e)
 			
-		try:
-		
-			print("Opening AUDIO with playsound: ")
-			print(" ", fname)
+			try:
+			
+				print("Opening AUDIO with playsound: ")
+				print(" ", fname)
+				playsound(fname)
+				
+			except Exception as e: 
+				print('Exception opening file with playsound')
+				print(e)
+			
+				try:
+				
+					print("Opening AUDIO with vlc: ")
+					print(" ", fname)
 
-			playsound(fname)
-			
-			return
-		except Exception as e: 
-			print('Exception opening file with playsound')
-			print(e)
-			
-		try:
-		
-			print("Opening AUDIO with vlc: ")
-			print(" ", fname)
+					p = vlc.MediaPlayer(fname)
+					p.play()
+					p.stop()
 
-			p = vlc.MediaPlayer(fname)
-			p.play()
-			p.stop()
-			
-			return
-		except Exception as e: 
-			print('Exception opening file with vlc')
-			print(e)
+				except Exception as e: 
+					print('Exception opening file with vlc')
+					print(e)
 
 			
 	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY' or exten == 'LOG':
@@ -96,7 +91,7 @@ def preview_file(fname):
 			sleep(0.1)
 	else:
 		print(exten, ' extension cannot be previewed')
-		return fname
+		return str(fname)
 		
 		
 	appending = input('What should we append to the file name to describe it? ')
@@ -107,9 +102,9 @@ def preview_file(fname):
 		os.rename(fname, dest)
 		lineitem('New Name', dest)
 		sleep(2)
-		return dest
+		return str(dest)
 	else:
-		return fname
+		return str(fname)
 
 
 
@@ -148,7 +143,19 @@ def pickfolder(starting):
 			
 				thisSummary = foldersummary(file)				
 				folders = folders + 1
-				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, "Folders: " + str(thisSummary["folders"]), "Files: " + str(thisSummary["files"]))
+				
+				if thisSummary["folders"] > 0:
+					folderItem = "Folders: " + str(thisSummary["folders"])
+				else:
+					folderItem = ""
+				
+				if thisSummary["files"] > 0:
+					fileItem = "Files: " + str(thisSummary["files"])
+				else:
+					fileItem = ""
+
+
+				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem)
 				
 				if folders % 20 == 0 and folders < 100:
 					sleep(3)
@@ -308,7 +315,6 @@ def sortfile(response, file):
 	dircheck = response["folder"]
 
 	debug_print("in sortfile")
-	debug_print("File location: " + file)
 	
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
@@ -329,6 +335,7 @@ def sortfile(response, file):
 		lineitem('Time frame', timeframefound)
 		destfolder = timeframefound
 		newpath = dircheck
+		newfilelocation = file
 	else:
 		destfolder = easyoptions(rootmap, 'What timeframe? ')
 		newpath = dircheck + '/' + destfolder
@@ -350,6 +357,7 @@ def sortfile(response, file):
 	if destfolder == 'is actionable this quarter' or destfolder == 'is actionable this year' or destfolder == 'is someday':
 		
 		actmap = {"o":"open"}
+		actmap["exit"] = "exit"
 		actmap["b"] = "books"
 		actmap["bs"] = "buy at store"
 		actmap["bo"] = "buy online"
@@ -368,6 +376,7 @@ def sortfile(response, file):
 	elif destfolder == 'is reference':
 	
 		refmap = {"o": "open"}
+		refmap["exit"] = "exit"
 		refmap["f"] = "finances"
 		refmap["l"] = "living-space"
 		refmap["h"] = "health"
@@ -381,14 +390,17 @@ def sortfile(response, file):
 	if subfolder != '':
 	
 		if subfolder == 'open':
-			newfile = preview_file(file)
-			return sortfile(response, newfile)
+			newfilelocation = preview_file(newfilelocation)
+			return sortfile(response, newfilelocation)
+		elif subfolder == 'exit':
+			return {"action" : "exit"}
+
 
 		newpath = newpath + '/' + subfolder
 		makefolders(newpath)
-		newfilelocation = movefile(file, newpath)
+		newfilelocation = movefile(newfilelocation, newpath)
 		
-	return {"action": "moved", "folder": newpath, "file": file}
+	return {"action": "moved", "folder": newpath, "file": newfilelocation}
 
 		
 		
