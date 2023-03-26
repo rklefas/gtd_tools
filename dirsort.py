@@ -201,17 +201,15 @@ def sortfolder(response):
 	debug_print("in sortfolder")
 	
 	dircheck = response["folder"]
-	summary = foldersummary(dircheck)
-	files = summary["files"]
-
-	lineitem("Directory", os.path.abspath(dircheck))
 	
 	if response["action"] == 'sort':
 		for file in glob.glob(dircheck+"/*"):
 			if os.path.isfile(file):
 			
+				summary = foldersummary(dircheck)
+				
 				lineitem("Directory", os.path.abspath(dircheck))
-				lineitem("  Files", str(files))
+				lineitem("  Files Left", str(summary["files"]))
 				
 				fresponse = sortfile(response, file)
 				
@@ -227,7 +225,7 @@ def sortfolder(response):
 				fileCount = fileCount + 1
 				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
 				
-				if fileCount % 20 == 0:
+				if fileCount % 20 == 0 and fileCount < 100:
 					sleep(3)
 				
 		confirmation("End of file list")
@@ -272,11 +270,24 @@ def easyoptions(map, question):
 
 
 
+def detecttimeframe(timeframes, file):
+
+	for key in timeframes:
+		if timeframes[key] == pathlib.Path(file).parent.stem:
+			return timeframes[key]
+		elif timeframes[key] == pathlib.Path(file).parent.parent.stem:
+			return timeframes[key]
+		
+	return None
+
+
+
 def sortfile(response, file):
 
 	dircheck = response["folder"]
 
 	debug_print("in sortfile")
+	debug_print("File location: " + file)
 	
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
@@ -291,7 +302,14 @@ def sortfile(response, file):
 	rootmap["o"] = "open"
 	rootmap["exit"] = "exit"
 
-	folder = easyoptions(rootmap, 'What timeframe? ')
+
+	timeframefound = detecttimeframe(rootmap, file)
+	
+	if timeframefound is not None:
+		lineitem('Time frame', timeframefound)
+		folder = timeframefound
+	else:
+		folder = easyoptions(rootmap, 'What timeframe? ')
 	
 	if folder == 'open':
 		preview_file(file)
