@@ -164,6 +164,10 @@ def pickfolder(starting):
 		if topSummary["files"] > 0:
 			lineitem("", "---------------------------")
 			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
+			
+			for xx in topSummary["extensions"]:
+				lineitem("  Ext " + str(xx),  str(topSummary["extensions"].get(xx)))
+				
 			lineitem("  sort", "Sort " + str(topSummary["files"]) + " files!")
 			lineitem("  melt", "Melt this folder!")
 			lineitem("", "---------------------------")
@@ -177,11 +181,17 @@ def pickfolder(starting):
 			elif tmp == '..':
 				picked = 0
 			elif tmp == 'list':
-				return {"action" : "list", "folder" : os.path.abspath(dircheck)}
+
+				filter = input("Filter by filename? ")
+			
+				return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'melt':
 				return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
-				return {"action" : "sort", "folder" : os.path.abspath(dircheck)}
+			
+				filter = input("Filter by filename? ")
+			
+				return {"action" : "sort", "filter": filter, "folder" : os.path.abspath(dircheck)}
 			else:
 				try:
 					picked = int(tmp)
@@ -206,16 +216,26 @@ def foldersummary(dircheck):
 	files = 0
 	folders = 0
 	size = 0
+	extensions = {}
 
 	for file in glob.glob(dircheck+"/*"):
 	
 		if os.path.isfile(file):
+		
+			exten = pathlib.Path(file).suffix.strip(".")	
+			value = extensions.get(exten)
+	
+			if value == None:
+				extensions[exten] = 1
+			else:
+				extensions[exten] = value + 1
+		
 			files = files + 1
 			size = size + os.path.getsize(file)
 		else:
 			folders = folders + 1
 
-	return {"path": dircheck, "files": files, "folders": folders, "size": size}
+	return {"path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
 
 
 def sortfolder(response):
@@ -225,7 +245,7 @@ def sortfolder(response):
 	dircheck = response["folder"]
 	
 	if response["action"] == 'sort':
-		for file in glob.glob(dircheck+"/*"):
+		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
 			
 				summary = foldersummary(dircheck)
@@ -242,7 +262,7 @@ def sortfolder(response):
 	
 		fileCount = 0
 	
-		for file in glob.glob(dircheck+"/*"):
+		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
 				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
