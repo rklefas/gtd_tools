@@ -351,17 +351,14 @@ def sortfile(response, file):
 	debug_print("in sortfile")
 	
 	lineitem("File", pathlib.Path(file).name)
-	lineitem("Size", str(os.path.getsize(file)))
 		
-	rootmap = {}
+	rootmap = {"up": "..", "o": "open", "exit": "exit"}
 	rootmap["a"] = "is actionable"
 	rootmap["s"] = "is someday"
 	rootmap["r"] = "is reference"
 	rootmap["c"] = "is completed"
 	rootmap["t"] = "is trash"
 	rootmap["n"] = "is not sure"
-	rootmap["o"] = "open"
-	rootmap["exit"] = "exit"
 
 	timeframefound = detecttimeframe(rootmap, file)
 	
@@ -390,8 +387,7 @@ def sortfile(response, file):
 	
 	if destfolder == 'is actionable' or destfolder == 'is someday':
 		
-		actmap = {"o":"open"}
-		actmap["exit"] = "exit"
+		actmap = {"up": "..", "o": "open", "exit": "exit"}
 		actmap["b"] = "books"
 		actmap["bs"] = "buy at store"
 		actmap["bo"] = "buy online"
@@ -411,8 +407,7 @@ def sortfile(response, file):
 
 	elif destfolder == 'is reference':
 	
-		refmap = {"o": "open"}
-		refmap["exit"] = "exit"
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["f"] = "finances"
 		refmap["l"] = "living-space"
 		refmap["h"] = "health"
