@@ -108,6 +108,20 @@ def preview_file(fname):
 
 
 
+def dedupemap(mapping):
+
+	newmap = {}
+	listx = []
+	
+	for key in mapping:	
+		valux = mapping.get(key)
+
+		if valux not in listx:
+			listx.append(valux)	
+			newmap[key] = valux
+
+	return newmap
+
 
 def getfolders(dircheck):
 
@@ -383,6 +397,7 @@ def sortfile(response, file):
 		actmap["bo"] = "buy online"
 		actmap["ed"] = "education-classes"
 		actmap["e"] = "events"
+		actmap["ex"] = "expert service"
 		actmap["me"] = "find an outlet for media"
 		actmap["p"] = "places"
 		actmap["r"] = "read"
@@ -390,7 +405,8 @@ def sortfile(response, file):
 		actmap["c"] = "research at computer"
 		actmap["w"] = "watch"
 		actmap["wr"] = "write to list"
-		actmap.update(getfolders(newpath))			
+		actmap.update(getfolders(newpath))
+		actmap = dedupemap(actmap)
 		subfolder = easyoptions(actmap, 'Choose an action subfolder: ')
 
 	elif destfolder == 'is reference':
@@ -404,6 +420,8 @@ def sortfile(response, file):
 		refmap["r"] = "relationships"
 		refmap["s"] = "spiritual"
 		refmap.update(getfolders(newpath))
+		refmap = dedupemap(refmap)
+
 		subfolder = easyoptions(refmap, 'Choose a reference subfolder: ')
 
 			
