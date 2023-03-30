@@ -14,7 +14,7 @@ import random
 def do_log(message):
 	dateX = datetime.now().strftime("%Y-%m-%d")
 	timeX = datetime.now().strftime(" %H:%M:%S")
-	file1 = open(dateX + "-moved.log", "a")
+	file1 = open('logs/' + dateX + "-moved.log", "a")
 	file1.write(dateX + timeX + " " + message + "\n")
 	file1.close()
 
@@ -339,8 +339,8 @@ def sortfile(response, file):
 	lineitem("File", pathlib.Path(file).name)
 	lineitem("Size", str(os.path.getsize(file)))
 		
-	rootmap = {"q":"is actionable this quarter"}
-	rootmap["a"] = "is actionable this year"
+	rootmap = {}
+	rootmap["a"] = "is actionable"
 	rootmap["s"] = "is someday"
 	rootmap["r"] = "is reference"
 	rootmap["c"] = "is completed"
@@ -374,7 +374,7 @@ def sortfile(response, file):
 
 	subfolder = ''
 	
-	if destfolder == 'is actionable this quarter' or destfolder == 'is actionable this year' or destfolder == 'is someday':
+	if destfolder == 'is actionable' or destfolder == 'is someday':
 		
 		actmap = {"o":"open"}
 		actmap["exit"] = "exit"
