@@ -258,6 +258,24 @@ def sortfolder(response):
 	
 	dircheck = response["folder"]
 	
+					
+	if response["action"] == 'list':
+	
+		fileCount = 0
+	
+		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
+			if os.path.isfile(file):
+				fileCount = fileCount + 1
+				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
+				
+				if fileCount % 20 == 0 and fileCount < 100:
+					sleep(3)
+				
+		if input('Do you want to sort these files? (y/n) ') == 'y':
+			response["action"] = 'sort'
+			
+			
+			
 	if response["action"] == 'sort':
 		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
@@ -271,22 +289,10 @@ def sortfolder(response):
 				
 				if fresponse["action"] == 'exit':
 					break
-					
-	elif response["action"] == 'list':
+
+
 	
-		fileCount = 0
-	
-		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
-			if os.path.isfile(file):
-				fileCount = fileCount + 1
-				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
-				
-				if fileCount % 20 == 0 and fileCount < 100:
-					sleep(3)
-				
-		confirmation("End of file list")
-				
-	elif response["action"] == 'melt':
+	if response["action"] == 'melt':
 	
 		print(response)
 	
