@@ -22,7 +22,7 @@ def debug_print(message):
 	print("")
 	print(message + " [DEBUGGING]")
 	print("")
-	sleep(0.1)
+	sleep(0.025)
 
 
 def preview_file(fname):
@@ -172,7 +172,7 @@ def pickfolder(starting):
 				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem)
 				
 				if folders % 20 == 0 and folders < 100:
-					sleep(3)
+					sleep(2)
 
 		
 		if topSummary["files"] > 0:
@@ -269,7 +269,7 @@ def sortfolder(response):
 				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0 and fileCount < 100:
-					sleep(3)
+					sleep(2)
 				
 		if input('Do you want to sort these files? (y/n) ') == 'y':
 			response["action"] = 'sort'
@@ -420,10 +420,11 @@ def sortfile(response, file):
 		refmap["p"] = "photos"
 		refmap["r"] = "relationships"
 		refmap["s"] = "spiritual"
+		refmap["t"] = "travel"
 		refmap.update(getfolders(newpath))
 		refmap = dedupemap(refmap)
 
-		subfolder = easyoptions(refmap, 'Choose a reference subfolder: ')
+		subfolder = easyoptions(refmap, 'Choose a reference folder (outcome as name): ')
 
 			
 	if subfolder != '':
@@ -449,7 +450,7 @@ def lineitem(key, value):
 		key = key + ":"
 		
 	print(key.ljust(15, " ") + value)
-	sleep(0.05)
+	sleep(0.025)
 
 
 def longerlineitem(key, val1, val2, val3):
@@ -506,13 +507,19 @@ while True:
 
 	debug_print("in main loop")
 		
-	response = pickfolder(dircheck)
-
-	if response["action"] == 'exit':
-		print('Exiting now')
-		sleep(2)
-		break
-	else:
-		dircheck = response["folder"]
+	try:
 		
-	sortfolder(response)
+		response = pickfolder(dircheck)
+
+		if response["action"] == 'exit':
+			print('Exiting now')
+			sleep(2)
+			break
+		else:
+			dircheck = response["folder"]
+			
+		sortfolder(response)
+		
+	except Exception as e: 
+		print(e)
+		confirmation('The system has recoved from a major failure')
