@@ -96,7 +96,7 @@ def preview_file(fname):
 		
 	appending = input('What should we append to the file name to describe it? ')
 
-	if appending != '':
+	if len(appending) > 2:
 		dest = pathlib.Path(fname)
 		dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
 		os.rename(fname, dest)
@@ -163,13 +163,19 @@ def pickfolder(starting):
 				else:
 					folderItem = ""
 				
-				if thisSummary["files"] > 0:
+				if thisSummary["files"] > 20:
+					fileItem = "! Files: " + str(thisSummary["files"])
+				elif thisSummary["files"] > 0:
 					fileItem = "Files: " + str(thisSummary["files"])
 				else:
 					fileItem = ""
 
+				if thisSummary["files"] > 0:
+					sizeItem = "Size: " + human_readable_size(thisSummary["size"], 1)
+				else:
+					sizeItem = ""
 
-				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem)
+				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
 				
 				if folders % 20 == 0 and folders < 100:
 					sleep(2)
@@ -223,6 +229,13 @@ def pickfolder(starting):
 					if folders == picked:
 						dircheck = os.path.abspath(file)
 
+
+def human_readable_size(size, decimal_places=2):
+    for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
+        if size < 1024.0 or unit == 'PiB':
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f} {unit}"
 
 
 def foldersummary(dircheck):
@@ -343,6 +356,10 @@ def detecttimeframe(timeframes, file):
 	return None
 
 
+def nameisgarbage(file):
+	re.search('\d+_\d+', pathlib.Path(file).stem)
+
+
 def makefolders(newpath):
 	if not os.path.exists(newpath):
 		os.makedirs(newpath)
@@ -453,8 +470,8 @@ def lineitem(key, value):
 	sleep(0.025)
 
 
-def longerlineitem(key, val1, val2, val3):
-	lineitem(key, val1.ljust(30, " ") + val2.ljust(15, " ") + val3.ljust(10, " "))
+def longerlineitem(key, val1, val2, val3, val4):
+	lineitem(key, val1.ljust(30, " ") + val2.ljust(15, " ") + val3.ljust(15, " ") + val4)
 
 
 def confirmation(message):
@@ -486,8 +503,8 @@ def movefile(current, dest):
 		
 		os.rename(current, dest)
 		
-		do_log('BEFORE ' + current)
-		do_log('AFTER  ' + dest)
+		do_log('MOVE ' + current)
+		do_log('  TO ' + dest)
 		
 		return dest
 		
