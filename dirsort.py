@@ -345,15 +345,76 @@ def easyoptions(map, question):
 
 
 
-def detecttimeframe(timeframes, file):
+def giveoptionset(sets):
+
+	if sets == 'root':
+	
+		rootmap = {"up": "..", "o": "open", "exit": "exit"}
+		rootmap["a"] = "is actionable"
+		rootmap["s"] = "is someday"
+		rootmap["r"] = "is reference"
+		rootmap["c"] = "is completed"
+		rootmap["t"] = "is trash"
+		rootmap["n"] = "is not sure"
+		
+		return rootmap
+
+	elif sets == 'is actionable' or sets == 'is someday':
+	
+		actmap = {"up": "..", "o": "open", "exit": "exit"}
+		actmap["b"] = "books"
+		actmap["bs"] = "buy at store"
+		actmap["bo"] = "buy online"
+		actmap["ed"] = "education-classes"
+		actmap["e"] = "events"
+		actmap["ex"] = "expert service"
+		actmap["me"] = "find an outlet for media"
+		actmap["p"] = "places"
+		actmap["r"] = "read"
+		actmap["re"] = "recipe"
+		actmap["c"] = "research at computer"
+		actmap["w"] = "watch"
+		actmap["wr"] = "write to list"
+
+		return actmap
+	elif sets == 'priority':
+	
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
+		refmap["s"] = "sooner"
+		refmap["l"] = "later"
+		
+		return refmap
+	elif sets == 'is reference':
+	
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
+		refmap["f"] = "finances"
+		refmap["l"] = "living-space"
+		refmap["h"] = "health"
+		refmap["p"] = "photos"
+		refmap["r"] = "relationships"
+		refmap["s"] = "spiritual"
+		refmap["t"] = "travel"
+		
+		return refmap
+	else:
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
+		
+		return refmap
+
+
+
+def detectoptionset(timeframes, file):
 
 	for key in timeframes:
 		if timeframes[key] == pathlib.Path(file).parent.stem:
 			return timeframes[key]
 		elif timeframes[key] == pathlib.Path(file).parent.parent.stem:
-			return timeframes[key]
+			return "priority"
+		elif timeframes[key] == pathlib.Path(file).parent.parent.parent.stem:
+			return "done"
 		
-	return None
+	return "root"
+
 
 
 def nameisgarbage(file):
@@ -369,81 +430,21 @@ def makefolders(newpath):
 
 def sortfile(response, file):
 
-	dircheck = response["folder"]
-
 	debug_print("in sortfile")
 	
 	lineitem("File", pathlib.Path(file).name)
 		
-	rootmap = {"up": "..", "o": "open", "exit": "exit"}
-	rootmap["a"] = "is actionable"
-	rootmap["s"] = "is someday"
-	rootmap["r"] = "is reference"
-	rootmap["c"] = "is completed"
-	rootmap["t"] = "is trash"
-	rootmap["n"] = "is not sure"
+	rootmap = giveoptionset('root')
+	detected = detectoptionset(rootmap, file)
+	newpath = response["folder"]
+	newfilelocation = file
 
-	timeframefound = detecttimeframe(rootmap, file)
-	
-	if timeframefound is not None:
-		lineitem('Time frame', timeframefound)
-		destfolder = timeframefound
-		newpath = dircheck
-		newfilelocation = file
-	else:
-		destfolder = easyoptions(rootmap, 'What timeframe? ')
-		newpath = dircheck + '/' + destfolder
-		
-		if destfolder == 'open':
-			newfile = preview_file(file)
-			return sortfile(response, newfile)
-		elif destfolder == 'exit':
-			return {"action" : "exit"}
-	
-		makefolders(newpath)
-		newfilelocation = movefile(file, newpath)
+	refmap = giveoptionset(detected)
+	refmap.update(getfolders(newpath))
+	refmap = dedupemap(refmap)
 
-	if destfolder == '':
-		return {"action" : "", "folder" : destfolder}
+	subfolder = easyoptions(refmap, detected + ' option set, pick one: ')
 
-	subfolder = ''
-	
-	if destfolder == 'is actionable' or destfolder == 'is someday':
-		
-		actmap = {"up": "..", "o": "open", "exit": "exit"}
-		actmap["b"] = "books"
-		actmap["bs"] = "buy at store"
-		actmap["bo"] = "buy online"
-		actmap["ed"] = "education-classes"
-		actmap["e"] = "events"
-		actmap["ex"] = "expert service"
-		actmap["me"] = "find an outlet for media"
-		actmap["p"] = "places"
-		actmap["r"] = "read"
-		actmap["re"] = "recipe"
-		actmap["c"] = "research at computer"
-		actmap["w"] = "watch"
-		actmap["wr"] = "write to list"
-		actmap.update(getfolders(newpath))
-		actmap = dedupemap(actmap)
-		subfolder = easyoptions(actmap, 'Choose an action subfolder: ')
-
-	elif destfolder == 'is reference':
-	
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
-		refmap["f"] = "finances"
-		refmap["l"] = "living-space"
-		refmap["h"] = "health"
-		refmap["p"] = "photos"
-		refmap["r"] = "relationships"
-		refmap["s"] = "spiritual"
-		refmap["t"] = "travel"
-		refmap.update(getfolders(newpath))
-		refmap = dedupemap(refmap)
-
-		subfolder = easyoptions(refmap, 'Choose a reference folder (outcome as name): ')
-
-			
 	if subfolder != '':
 	
 		if subfolder == 'open':
@@ -456,6 +457,9 @@ def sortfile(response, file):
 		newpath = newpath + '/' + subfolder
 		makefolders(newpath)
 		newfilelocation = movefile(newfilelocation, newpath)
+		response["folder"] = newpath
+		
+		return sortfile(response, newfilelocation)
 		
 	return {"action": "moved", "folder": newpath, "file": newfilelocation}
 
