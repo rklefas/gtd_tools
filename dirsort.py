@@ -349,41 +349,37 @@ def giveoptionset(sets):
 
 	if sets == 'root':
 	
-		rootmap = {"up": "..", "o": "open", "exit": "exit"}
-		rootmap["a"] = "is actionable"
-		rootmap["s"] = "is someday"
-		rootmap["r"] = "is reference"
-		rootmap["c"] = "is completed"
-		rootmap["t"] = "is trash"
-		rootmap["n"] = "is not sure"
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
+		refmap["a"] = "is actionable"
+		refmap["s"] = "is someday"
+		refmap["r"] = "is reference"
+		refmap["c"] = "is completed"
+		refmap["t"] = "is trash"
+		refmap["n"] = "is not sure"
 		
-		return rootmap
-
 	elif sets == 'is actionable' or sets == 'is someday':
 	
-		actmap = {"up": "..", "o": "open", "exit": "exit"}
-		actmap["b"] = "books"
-		actmap["bs"] = "buy at store"
-		actmap["bo"] = "buy online"
-		actmap["ed"] = "education-classes"
-		actmap["e"] = "events"
-		actmap["ex"] = "expert service"
-		actmap["me"] = "find an outlet for media"
-		actmap["p"] = "places"
-		actmap["r"] = "read"
-		actmap["re"] = "recipe"
-		actmap["c"] = "research at computer"
-		actmap["w"] = "watch"
-		actmap["wr"] = "write to list"
+		refmap = {"up": "..", "o": "open", "exit": "exit"}
+		refmap["b"] = "books"
+		refmap["bs"] = "buy at store"
+		refmap["bo"] = "buy online"
+		refmap["ed"] = "education-classes"
+		refmap["e"] = "events"
+		refmap["ex"] = "expert service"
+		refmap["me"] = "find an outlet for media"
+		refmap["p"] = "places"
+		refmap["r"] = "read"
+		refmap["re"] = "recipe"
+		refmap["c"] = "research at computer"
+		refmap["w"] = "watch"
+		refmap["wr"] = "write to list"
 
-		return actmap
 	elif sets == 'priority':
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["s"] = "sooner"
 		refmap["l"] = "later"
 		
-		return refmap
 	elif sets == 'is reference':
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
@@ -395,11 +391,10 @@ def giveoptionset(sets):
 		refmap["s"] = "spiritual"
 		refmap["t"] = "travel"
 		
-		return refmap
 	else:
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		
-		return refmap
+	return refmap
 
 
 
@@ -412,6 +407,8 @@ def detectoptionset(timeframes, file):
 			return "priority"
 		elif timeframes[key] == pathlib.Path(file).parent.parent.parent.stem:
 			return "done"
+		elif timeframes[key] == pathlib.Path(file).parent.parent.parent.parent.stem:
+			return "done"
 		
 	return "root"
 
@@ -419,13 +416,6 @@ def detectoptionset(timeframes, file):
 
 def nameisgarbage(file):
 	re.search('\d+_\d+', pathlib.Path(file).stem)
-
-
-def makefolders(newpath):
-	if not os.path.exists(newpath):
-		os.makedirs(newpath)
-
-
 
 
 def sortfile(response, file):
@@ -436,6 +426,10 @@ def sortfile(response, file):
 		
 	rootmap = giveoptionset('root')
 	detected = detectoptionset(rootmap, file)
+	
+	if detected == 'done':
+		return {"action": "", "folder": response["folder"], "file": file}
+	
 	newpath = response["folder"]
 	newfilelocation = file
 
@@ -453,13 +447,14 @@ def sortfile(response, file):
 		elif subfolder == 'exit':
 			return {"action" : "exit"}
 
-
 		newpath = newpath + '/' + subfolder
-		makefolders(newpath)
-		newfilelocation = movefile(newfilelocation, newpath)
-		response["folder"] = newpath
 		
-		return sortfile(response, newfilelocation)
+		if not os.path.exists(newpath):
+			os.makedirs(newpath)
+			
+		newfilelocation = movefile(newfilelocation, newpath)
+		
+		return sortfile({"action": "moved", "folder": newpath}, newfilelocation)
 		
 	return {"action": "moved", "folder": newpath, "file": newfilelocation}
 
