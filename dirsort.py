@@ -31,15 +31,7 @@ def preview_file(fname):
 
 	exten = pathlib.Path(fname).suffix.strip(".").upper()
 	
-	if exten == 'PNG' or exten == 'JPG' or exten == 'JPEG':
-		print("Opening IMAGE to preview: ", fname)
-		try:
-			Image.open(fname).show()
-		except Exception as e: 
-			print('Exception opening file')
-			print(e)
-			
-	elif exten == 'MP3':
+	if exten == 'MP3':
 			
 		try:
 		
@@ -83,15 +75,10 @@ def preview_file(fname):
 					print(e)
 
 			
-	elif exten == 'TXT' or exten == 'SQL' or exten == 'PY' or exten == 'LOG':
-	
-		f = open(fname, "r")
-		for x in f:
-			print(x.rstrip())
-			sleep(0.1)
 	else:
-		print(exten, ' extension cannot be previewed')
-		return str(fname)
+		print(exten, ' extension loading using default program')
+		os.startfile(fname)
+
 		
 		
 	appending = input('What should we append to the file name to describe it? ')
@@ -491,6 +478,12 @@ def folderquery(message):
 
 
 def movefile(current, dest):
+
+	if pathlib.Path(current).name == 'Thumbs.db':
+		os.remove(current)
+		do_log('DELETE ' + current)
+		return ''
+
 	dest = str(dest) + "/" + pathlib.Path(current).name
 	
 	try:
