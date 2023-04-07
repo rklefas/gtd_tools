@@ -21,12 +21,12 @@ def debug_print(message):
 	print("")
 	print(message + " [DEBUGGING]")
 	print("")
-	sleep(0.025)
+	sleep(0.01)
 
 
 def preview_file(fname):
 
-	debug_print("in preview_file")
+	# debug_print("in preview_file")
 
 	exten = pathlib.Path(fname).suffix.strip(".").upper()
 	
@@ -125,7 +125,7 @@ def getfolders(dircheck):
 
 def pickfolder(starting):
 
-	debug_print("in pickfolder")
+	# debug_print("in pickfolder")
 
 	dircheck = os.path.abspath(starting)
 	
@@ -253,7 +253,7 @@ def foldersummary(dircheck):
 
 def sortfolder(response):
 
-	debug_print("in sortfolder")
+	# debug_print("in sortfolder")
 	
 	dircheck = response["folder"]
 	
@@ -413,12 +413,33 @@ def detectoptionset(timeframes, file):
 
 
 def nameisgarbage(file):
-	re.search('\d+_\d+', pathlib.Path(file).stem)
+	
+	txt = pathlib.Path(file).stem
+	txt = txt.replace("Screenshot_", "")
+	txt = txt.replace("_Chrome", "")
+	txt = txt.replace("_YouTube", "")
+	txt = txt.replace("-", "")
+	txt = txt.replace("_", "")
+	txt = txt.replace("1", "")
+	txt = txt.replace("2", "")
+	txt = txt.replace("3", "")
+	txt = txt.replace("4", "")
+	txt = txt.replace("5", "")
+	txt = txt.replace("6", "")
+	txt = txt.replace("7", "")
+	txt = txt.replace("8", "")
+	txt = txt.replace("9", "")
+	txt = txt.replace("0", "")
+	
+	if len(txt) == 0:
+		return True
+	else:
+		return False
 
 
 def sortfile(response, file):
 
-	debug_print("in sortfile")
+	# debug_print("in sortfile")
 	
 	lineitem("File", pathlib.Path(file).name)
 		
@@ -434,6 +455,9 @@ def sortfile(response, file):
 	refmap = giveoptionset(detected)
 	refmap.update(getfolders(newpath))
 	refmap = dedupemap(refmap)
+
+	if nameisgarbage(newfilelocation):
+		newfilelocation = preview_file(newfilelocation)
 
 	subfolder = easyoptions(refmap, detected + ' option set, pick one: ')
 
@@ -464,7 +488,7 @@ def lineitem(key, value):
 		key = key + ":"
 		
 	print(key.ljust(15, " ") + value)
-	sleep(0.025)
+	sleep(0.01)
 
 
 def longerlineitem(key, val1, val2, val3, val4):
@@ -501,6 +525,9 @@ def movefile(current, dest):
 		if os.path.isdir(dest):
 			dest = dest + '/' + pathlib.Path(current).name + '-conflict-' + str(random.randrange(1000,9999))
 
+		if os.path.isfile(dest):
+			dest = dest + '-' + str(random.randrange(1000,9999)) + '.duplicate'
+
 		lineitem('Current', current)
 		lineitem('Destination', dest)
 		
@@ -525,7 +552,7 @@ else:
 
 while True:
 
-	debug_print("in main loop")
+	# debug_print("in main loop")
 		
 	try:
 		
