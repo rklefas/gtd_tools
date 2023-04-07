@@ -3,7 +3,6 @@ import glob
 import os
 import pathlib
 from time import sleep
-from PIL import Image
 from playsound import playsound
 import pygame
 import vlc
@@ -388,7 +387,19 @@ def giveoptionset(sets):
 def detectoptionset(timeframes, file):
 
 	for key in timeframes:
-		if timeframes[key] == pathlib.Path(file).parent.stem:
+		if 'is trash' == pathlib.Path(file).parent.stem:
+			return 'done'
+		elif 'is completed' == pathlib.Path(file).parent.stem:
+			return 'done'
+		elif 'is not sure' == pathlib.Path(file).parent.stem:
+			return 'done'
+		elif 'is reference' == pathlib.Path(file).parent.stem:
+			return 'is reference'
+		elif 'is reference' == pathlib.Path(file).parent.parent.stem:
+			return 'basic'
+		elif 'is reference' == pathlib.Path(file).parent.parent.parent.stem:
+			return 'basic'
+		elif timeframes[key] == pathlib.Path(file).parent.stem:
 			return timeframes[key]
 		elif timeframes[key] == pathlib.Path(file).parent.parent.stem:
 			return "priority"
