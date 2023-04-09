@@ -7,7 +7,7 @@ from playsound import playsound
 import pygame
 import vlc
 import random
-
+import re
 
 
 def do_log(message):
@@ -30,7 +30,25 @@ def preview_file(fname):
 
 	exten = pathlib.Path(fname).suffix.strip(".").upper()
 	
-	if exten == 'MP3':
+	if exten == 'URL' and ' archive]' not in fname:
+		
+		yearInput = input('Load which year? ')
+		
+		archiveName = fname.replace('.url', ' [' + yearInput + ' archive].url')
+		archiveUrl = 'https://web.archive.org/web/' + yearInput + '/'
+		
+		with open(fname, 'r') as file:
+			data = file.read()
+			
+		data = data.replace('URL=', 'URL=' + archiveUrl)
+
+		text_file = open(archiveName, "w")
+		text_file.write(data)
+		text_file.close()
+
+		os.startfile(archiveName)
+
+	elif exten == 'MP3':
 			
 		try:
 		
@@ -172,7 +190,7 @@ def pickfolder(starting):
 			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
 			
 			for xx in topSummary["extensions"]:
-				lineitem("  Ext " + str(xx),  str(topSummary["extensions"].get(xx)))
+				lineitem("    ." + str(xx),  str(topSummary["extensions"].get(xx)))
 				
 			lineitem("  sort", "Sort " + str(topSummary["files"]) + " files!")
 			lineitem("  melt", "Melt this folder!")
@@ -310,10 +328,22 @@ def sortfolder(response):
 
 
 def easyoptions(map, question):
+
+	columns = 0
+	outstring = ""
+
 	for key in map:
-		lineitem(key, map[key])
+		outstring = outstring + str('  ' + key + ' = ' + map[key]).ljust(30, " ")
+		columns = columns + 1
+		
+		if columns == 3:
+			print(outstring)
+			outstring = ""
+			columns = 0
+	
 	
 	lineitem('other', 'enter a custom value not listed')
+	print("")
 	inputx = input(question)
 	
 	if inputx == '':
@@ -416,8 +446,10 @@ def nameisgarbage(file):
 	
 	txt = pathlib.Path(file).stem
 	txt = txt.replace("Screenshot_", "")
+	txt = txt.replace("IMG_", "")
 	txt = txt.replace("_Chrome", "")
 	txt = txt.replace("_YouTube", "")
+	txt = txt.replace("_Textra", "")
 	txt = txt.replace("-", "")
 	txt = txt.replace("_", "")
 	txt = txt.replace("1", "")
