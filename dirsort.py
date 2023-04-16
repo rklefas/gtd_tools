@@ -46,6 +46,7 @@ def preview_file(fname):
 		text_file.write(data)
 		text_file.close()
 
+		os.startfile(fname)
 		os.startfile(archiveName)
 
 	elif exten == 'MP3':
@@ -341,7 +342,8 @@ def easyoptions(map, question):
 			outstring = ""
 			columns = 0
 	
-	
+	print(outstring)
+
 	lineitem('other', 'enter a custom value not listed')
 	print("")
 	inputx = input(question)
