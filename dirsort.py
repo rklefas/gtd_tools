@@ -5,9 +5,50 @@ import pathlib
 from time import sleep
 from playsound import playsound
 import pygame
-import vlc
 import random
 import re
+import json
+
+
+def globber(ex):
+	print(datetime.now().strftime("%H:%M:%S"), ex)
+	xx = glob.glob(ex)
+	print(datetime.now().strftime("%H:%M:%S"), ex)
+	return xx
+
+
+def clear_cache():
+	for file in globber("./cache/*.txt"):
+		os.remove(file)
+
+
+
+def dirfetch(type, dir):
+	dateX = dir.replace('\\', '-')
+	dateX = dateX.replace('/', '-')
+	dateX = dateX.replace('*', '-')
+	dateX = dateX.replace(':', '-')
+	
+	fp = open('cache/' + type + '-' + dateX + ".txt", "r")
+	return json.load(fp)
+
+
+def dirput(type, dir, data):
+	dateX = dir.replace('\\', '-')
+	dateX = dateX.replace('/', '-')
+	dateX = dateX.replace('*', '-')
+	dateX = dateX.replace(':', '-')
+	
+	file = 'cache/' + type + '-' + dateX + ".txt"
+	
+	print('Created', file)
+	
+	fp = open(file, "w")
+	json.dump(data, fp, indent=2)
+	fp.close()
+
+	return dirfetch(type, dir)
+  
 
 
 def do_log(message):
@@ -34,20 +75,22 @@ def preview_file(fname):
 		
 		yearInput = input('Load which year? ')
 		
-		archiveName = fname.replace('.url', ' [' + yearInput + ' archive].url')
-		archiveUrl = 'https://web.archive.org/web/' + yearInput + '/'
+		if len(yearInput) > 0:
+			archiveName = fname.replace('.url', ' [' + yearInput + ' archive].url')
+			archiveUrl = 'https://web.archive.org/web/' + yearInput + '/'
 		
-		with open(fname, 'r') as file:
-			data = file.read()
+			with open(fname, 'r') as file:
+				data = file.read()
+				
+			data = data.replace('URL=', 'URL=' + archiveUrl)
+
+			text_file = open(archiveName, "w")
+			text_file.write(data)
+			text_file.close()
+
+			os.startfile(archiveName)
 			
-		data = data.replace('URL=', 'URL=' + archiveUrl)
-
-		text_file = open(archiveName, "w")
-		text_file.write(data)
-		text_file.close()
-
 		os.startfile(fname)
-		os.startfile(archiveName)
 
 	elif exten == 'MP3':
 			
@@ -56,7 +99,7 @@ def preview_file(fname):
 			print("Opening AUDIO with pygame: ")
 			print(" ", fname)
 			
-			pygame.mixer.init()  # initialize mixer module
+			pygame.mixer.init()	 # initialize mixer module
 			pygame.mixer.music.load(fname)
 			pygame.mixer.music.play()
 
@@ -78,20 +121,6 @@ def preview_file(fname):
 			except Exception as e: 
 				print('Exception opening file with playsound')
 				print(e)
-			
-				try:
-				
-					print("Opening AUDIO with vlc: ")
-					print(" ", fname)
-
-					p = vlc.MediaPlayer(fname)
-					p.play()
-					p.stop()
-
-				except Exception as e: 
-					print('Exception opening file with vlc')
-					print(e)
-
 			
 	else:
 		print(exten, ' extension loading using default program')
@@ -130,16 +159,20 @@ def dedupemap(mapping):
 
 def getfolders(dircheck):
 
-	golist = {"0": ".."}
+	try:
+		gotback = dirfetch('getfolders', dircheck)
+		return gotback
+	except:
+		golist = {"0": ".."}
 
-	folders = 0
+		folders = 0
 
-	for file in glob.glob(dircheck+"/*"):
-		if os.path.isdir(file):
-			folders = folders + 1
-			golist[str(folders)] = pathlib.Path(file).stem
+		for file in globber(dircheck+"/*"):
+			if os.path.isdir(file):
+				folders = folders + 1
+				golist[str(folders)] = pathlib.Path(file).stem
 
-	return golist
+		return dirput('getfolders', dircheck, golist)
 
 
 def pickfolder(starting):
@@ -153,48 +186,48 @@ def pickfolder(starting):
 		picked = None
 		folders = 0
 		lineitem("Currently in", dircheck)
-		lineitem("  Browse " + str(folders), "..")
 
 		topSummary = foldersummary(dircheck)
+		gotten = getfolders(dircheck)
 
-		for file in glob.glob(dircheck+"/*"):
-			if os.path.isdir(file):
+		for file in gotten.values():
+
+			thisSummary = foldersummary(dircheck + '/' + file)				
 			
-				thisSummary = foldersummary(file)				
-				folders = folders + 1
-				
-				if thisSummary["folders"] > 0:
-					folderItem = "Folders: " + str(thisSummary["folders"])
-				else:
-					folderItem = ""
-				
-				if thisSummary["files"] > 20:
-					fileItem = "! Files: " + str(thisSummary["files"])
-				elif thisSummary["files"] > 0:
-					fileItem = "Files: " + str(thisSummary["files"])
-				else:
-					fileItem = ""
+			if thisSummary["folders"] > 0:
+				folderItem = "Folders: " + str(thisSummary["folders"])
+			else:
+				folderItem = ""
+			
+			if thisSummary["files"] > 20:
+				fileItem = "! Files: " + str(thisSummary["files"])
+			elif thisSummary["files"] > 0:
+				fileItem = "Files: " + str(thisSummary["files"])
+			else:
+				fileItem = ""
 
-				if thisSummary["files"] > 0:
-					sizeItem = "Size: " + human_readable_size(thisSummary["size"], 1)
-				else:
-					sizeItem = ""
+			if thisSummary["files"] > 0:
+				sizeItem = "Size: " + human_readable_size(thisSummary["size"], 1)
+			else:
+				sizeItem = ""
 
-				longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
+			longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
+			
+			if folders % 20 == 0 and folders < 100:
+				sleep(2)
 				
-				if folders % 20 == 0 and folders < 100:
-					sleep(2)
+			folders = folders + 1
 
 		
 		if topSummary["files"] > 0:
 			lineitem("", "---------------------------")
-			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
+			lineitem("	list", "List " + str(topSummary["files"]) + " files!")
 			
 			for xx in topSummary["extensions"]:
-				lineitem("    ." + str(xx),  str(topSummary["extensions"].get(xx)))
+				lineitem("	  ." + str(xx),	 str(topSummary["extensions"].get(xx)))
 				
-			lineitem("  sort", "Sort " + str(topSummary["files"]) + " files!")
-			lineitem("  melt", "Melt this folder!")
+			lineitem("	sort", "Sort " + str(topSummary["files"]) + " files!")
+			lineitem("	melt", "Melt this folder!")
 			lineitem("", "---------------------------")
 
 		if picked == None:
@@ -228,7 +261,7 @@ def pickfolder(starting):
 		if picked == 0:
 			dircheck = os.path.abspath(dircheck+"/..")
 		else:
-			for file in glob.glob(dircheck+"/*"):	
+			for file in globber(dircheck+"/*"):	
 				if os.path.isdir(file):
 					folders = folders + 1
 					if folders == picked:
@@ -236,38 +269,47 @@ def pickfolder(starting):
 
 
 def human_readable_size(size, decimal_places=2):
-    for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
-        if size < 1024.0 or unit == 'PiB':
-            break
-        size /= 1024.0
-    return f"{size:.{decimal_places}f} {unit}"
+	for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
+		if size < 1024.0 or unit == 'PiB':
+			break
+		size /= 1024.0
+	return f"{size:.{decimal_places}f} {unit}"
 
 
 def foldersummary(dircheck):
 
-	files = 0
-	folders = 0
-	size = 0
-	extensions = {}
+	try:
+		gotback = dirfetch('foldersummary', dircheck)
+		return gotback
+	except:
 
-	for file in glob.glob(dircheck+"/*"):
-	
-		if os.path.isfile(file):
+		files = 0
+		folders = 0
+		size = 0
+		extensions = {}
+
+		for file in globber(dircheck+"/***"):
 		
-			exten = pathlib.Path(file).suffix.strip(".")	
-			value = extensions.get(exten)
-	
-			if value == None:
-				extensions[exten] = 1
+			if os.path.isfile(file):
+			
+				exten = pathlib.Path(file).suffix.strip(".")	
+				value = extensions.get(exten)
+		
+				if value == None:
+					extensions[exten] = 1
+				else:
+					extensions[exten] = value + 1
+			
+				files = files + 1
+				size = size + 0
 			else:
-				extensions[exten] = value + 1
-		
-			files = files + 1
-			size = size + os.path.getsize(file)
-		else:
-			folders = folders + 1
+				folders = folders + 1
 
-	return {"path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
+		golist = {"path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
+		
+		return dirput('foldersummary', dircheck, golist)
+
+
 
 
 def sortfolder(response):
@@ -281,7 +323,7 @@ def sortfolder(response):
 	
 		fileCount = 0
 	
-		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
+		for file in globber(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
 				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
@@ -295,13 +337,10 @@ def sortfolder(response):
 			
 			
 	if response["action"] == 'sort':
-		for file in glob.glob(dircheck + "/*" + response["filter"] + '*'):
+		for file in globber(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
-			
-				summary = foldersummary(dircheck)
 				
 				lineitem("Directory", os.path.abspath(dircheck))
-				lineitem("  Files Left", str(summary["files"]))
 				
 				fresponse = sortfile(response, file)
 				
@@ -314,7 +353,7 @@ def sortfolder(response):
 	
 		print(response)
 	
-		for file in glob.glob(dircheck+"/*"):
+		for file in globber(dircheck+"/*"):
 			movefile(file, pathlib.Path(file).parent.parent)
 
 		confirmation("Folder will be deleted: " + dircheck)
@@ -395,8 +434,10 @@ def giveoptionset(sets):
 	elif sets == 'priority':
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
-		refmap["s"] = "sooner"
-		refmap["l"] = "later"
+		refmap["h"] = "high value"
+		refmap["m"] = "medium value"
+		refmap["l"] = "low value"
+		refmap["n"] = "not sure"
 		
 	elif sets == 'is reference':
 	
@@ -475,14 +516,14 @@ def sortfile(response, file):
 
 	# debug_print("in sortfile")
 	
-	lineitem("File", pathlib.Path(file).name)
-		
 	rootmap = giveoptionset('root')
 	detected = detectoptionset(rootmap, file)
 	
 	if detected == 'done':
 		return {"action": "", "folder": response["folder"], "file": file}
 	
+	lineitem("File", pathlib.Path(file).name)
+		
 	newpath = response["folder"]
 	newfilelocation = file
 
@@ -589,10 +630,10 @@ while True:
 	# debug_print("in main loop")
 		
 	try:
-		
 		response = pickfolder(dircheck)
 
 		if response["action"] == 'exit':
+			clear_cache()
 			print('Exiting now')
 			sleep(2)
 			break
@@ -601,6 +642,7 @@ while True:
 			
 		sortfolder(response)
 		
-	except Exception as e: 
+	except Exception as e:
 		print(e)
 		confirmation('The system has recoved from a major failure')
+
