@@ -17,8 +17,8 @@ def globber(ex):
 	return xx
 
 
-def clear_cache():
-	for file in globber("./cache/*.txt"):
+def clear_cache(filter = ""):
+	for file in globber("./cache/*" + filter + "*.txt"):
 		os.remove(file)
 
 
@@ -360,6 +360,7 @@ def sortfolder(response):
 
 		try:
 			os.rmdir(dircheck)
+			clear_cache(pathlib.Path(file).parent.parent.stem)
 		except Exception as e: 
 			print(e)
 
@@ -548,6 +549,8 @@ def sortfile(response, file):
 		
 		if not os.path.exists(newpath):
 			os.makedirs(newpath)
+			clear_cache('getfolders')
+
 			
 		newfilelocation = movefile(newfilelocation, newpath)
 		
