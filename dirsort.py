@@ -213,7 +213,7 @@ def pickfolder(starting):
 
 			longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
 			
-			if folders % 20 == 0 and folders < 100:
+			if folders > 0 and folders % 20 == 0 and folders < 100:
 				sleep(2)
 				
 			folders = folders + 1
@@ -285,7 +285,7 @@ def foldersummary(dircheck):
 		size = 0
 		extensions = {}
 
-		for file in globber(dircheck+"/***"):
+		for file in globber(dircheck+"/*"):
 		
 			if os.path.isfile(file):
 			
