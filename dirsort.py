@@ -22,23 +22,23 @@ def clear_cache(filter = ""):
 		os.remove(file)
 
 
-
-def dirfetch(type, dir):
-	dateX = dir.replace('\\', '-')
+def slug_path(dir):
+	dateX = os.path.abspath(dir)
+	dateX = dateX.replace('\\', '-')
 	dateX = dateX.replace('/', '-')
 	dateX = dateX.replace('*', '-')
 	dateX = dateX.replace(':', '-')
-	
+	return dateX
+
+
+def dirfetch(type, dir):
+	dateX = slug_path(dir)
 	fp = open('cache/' + type + '-' + dateX + ".txt", "r")
 	return json.load(fp)
 
 
 def dirput(type, dir, data):
-	dateX = dir.replace('\\', '-')
-	dateX = dateX.replace('/', '-')
-	dateX = dateX.replace('*', '-')
-	dateX = dateX.replace(':', '-')
-	
+	dateX = slug_path(dir)	
 	file = 'cache/' + type + '-' + dateX + ".txt"
 	
 	print('Created', file)
@@ -261,11 +261,8 @@ def pickfolder(starting):
 		if picked == 0:
 			dircheck = os.path.abspath(dircheck+"/..")
 		else:
-			for file in globber(dircheck+"/*"):	
-				if os.path.isdir(file):
-					folders = folders + 1
-					if folders == picked:
-						dircheck = os.path.abspath(file)
+			gets = getfolders(dircheck).get(str(picked))
+			dircheck = os.path.abspath(dircheck + '/' + gets)
 
 
 def human_readable_size(size, decimal_places=2):
