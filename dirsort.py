@@ -243,6 +243,8 @@ def pickfolder(starting):
 				filter = input("Filter by filename? ")
 			
 				return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
+			elif tmp == 'clear':
+				return {"action" : "clear", "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'melt':
 				return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
@@ -345,7 +347,9 @@ def sortfolder(response):
 					break
 
 
-	
+	if response["action"] == 'clear':
+		clear_cache()
+
 	if response["action"] == 'melt':
 	
 		print(response)
@@ -432,9 +436,10 @@ def giveoptionset(sets):
 	elif sets == 'priority':
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
-		refmap["h"] = "high value"
-		refmap["m"] = "medium value"
-		refmap["l"] = "low value"
+		refmap["hv"] = "high value"
+		refmap["h"] = "high interest"
+		refmap["m"] = "medium interest"
+		refmap["l"] = "low interest"
 		refmap["n"] = "not sure"
 		
 	elif sets == 'is reference':
