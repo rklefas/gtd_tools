@@ -8,12 +8,18 @@ import pygame
 import random
 import re
 import json
+from collections import Counter
 
 
 def globber(ex):
-	print(datetime.now().strftime("%H:%M:%S"), ex)
-	xx = glob.glob(ex)
-	print(datetime.now().strftime("%H:%M:%S"), ex)
+
+	first = datetime.now().strftime("%H:%M:%S")
+	xx = sorted(glob.glob(ex))
+	second = datetime.now().strftime("%H:%M:%S")
+
+	if first != second:
+		print(first, second, ex)
+
 	return xx
 
 
@@ -243,10 +249,8 @@ def pickfolder(starting):
 				filter = input("Filter by filename? ")
 			
 				return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
-			elif tmp == 'clear':
-				return {"action" : "clear", "folder" : os.path.abspath(dircheck)}
-			elif tmp == 'melt':
-				return {"action" : "melt", "folder" : os.path.abspath(dircheck)}
+			elif tmp == 'clear' or tmp == 'common' or tmp == 'melt':
+				return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
 			
 				filter = input("Filter by filename? ")
@@ -272,6 +276,10 @@ def human_readable_size(size, decimal_places=2):
 		if size < 1024.0 or unit == 'PiB':
 			break
 		size /= 1024.0
+	
+	if unit == 'B':
+		decimal_places = 0
+		
 	return f"{size:.{decimal_places}f} {unit}"
 
 
@@ -300,7 +308,7 @@ def foldersummary(dircheck):
 					extensions[exten] = value + 1
 			
 				files = files + 1
-				size = size + 0
+				size = size + os.path.getsize(file)
 			else:
 				folders = folders + 1
 
@@ -325,7 +333,7 @@ def sortfolder(response):
 		for file in globber(dircheck + "/*" + response["filter"] + '*'):
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
-				lineitem("  File " + str(fileCount), pathlib.Path(file).name)
+				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0 and fileCount < 100:
 					sleep(2)
@@ -345,6 +353,26 @@ def sortfolder(response):
 				
 				if fresponse["action"] == 'exit':
 					break
+
+
+	if response["action"] == 'common':
+	
+		text = ''
+		
+		for file in globber(dircheck+"/*"):
+			text = text + ' ' + pathlib.Path(file).stem
+
+		counts =  Counter(re.findall('\w+', text))
+		shown = 0
+		
+		for wordum in counts.most_common():
+			if len(wordum[0]) > 3 and wordum[1] > 1:
+				shown = shown + 1
+				lineitem(wordum[0], str(wordum[1]))
+				
+				if shown % 20 == 0:
+					if confirmation('Common words shown ' + str(shown) + ' ') == 'exit':
+						break
 
 
 	if response["action"] == 'clear':
@@ -436,7 +464,7 @@ def giveoptionset(sets):
 	elif sets == 'priority':
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
-		refmap["hv"] = "high value"
+		refmap["ps"] = "purchase, product, or service"
 		refmap["h"] = "high interest"
 		refmap["m"] = "medium interest"
 		refmap["l"] = "low interest"
@@ -576,7 +604,7 @@ def longerlineitem(key, val1, val2, val3, val4):
 
 
 def confirmation(message):
-	input("*** " + message)
+	return input("*** " + message)
 	
 
 
