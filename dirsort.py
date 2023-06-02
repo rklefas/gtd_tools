@@ -137,9 +137,7 @@ def preview_file(fname):
 	appending = input('What should we append to the file name to describe it? ')
 
 	if len(appending) > 2:
-		dest = pathlib.Path(fname)
-		dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
-		os.rename(fname, dest)
+		dest = append_rename(fname, appending)
 		lineitem('New Name', dest)
 		sleep(2)
 		return str(dest)
@@ -147,6 +145,14 @@ def preview_file(fname):
 		return str(fname)
 
 
+
+def append_rename(fname, appending):
+	dest = pathlib.Path(fname)
+	dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
+	os.rename(fname, dest)
+	
+	return dest
+	
 
 def dedupemap(mapping):
 
@@ -195,6 +201,11 @@ def pickfolder(starting):
 
 		topSummary = foldersummary(dircheck)
 		gotten = getfolders(dircheck)
+
+		# Preload cache data
+		for file in gotten.values():
+			thisSummary = foldersummary(dircheck + '/' + file)				
+
 
 		for file in gotten.values():
 
@@ -381,8 +392,14 @@ def sortfolder(response):
 	if response["action"] == 'melt':
 	
 		print(response)
+		
+		append = input('What do you want to append to the file names? ')
 	
 		for file in globber(dircheck+"/*"):
+		
+			if len(append) > 0:
+				file = append_rename(file, append)
+		
 			movefile(file, pathlib.Path(file).parent.parent)
 
 		confirmation("Folder will be deleted: " + dircheck)
@@ -465,6 +482,7 @@ def giveoptionset(sets):
 	
 		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["ps"] = "purchase, product, or service"
+		refmap["lv"] = "long term value"
 		refmap["h"] = "high interest"
 		refmap["m"] = "medium interest"
 		refmap["l"] = "low interest"
