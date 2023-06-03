@@ -238,13 +238,14 @@ def pickfolder(starting):
 		
 		if topSummary["files"] > 0:
 			lineitem("", "---------------------------")
-			lineitem("	list", "List " + str(topSummary["files"]) + " files!")
+			lineitem("  common", "Show common keywords in filenames")
+			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
 			
 			for xx in topSummary["extensions"]:
-				lineitem("	  ." + str(xx),	 str(topSummary["extensions"].get(xx)))
+				lineitem("    ." + str(xx), str(topSummary["extensions"].get(xx)))
 				
-			lineitem("	sort", "Sort " + str(topSummary["files"]) + " files!")
-			lineitem("	melt", "Melt this folder!")
+			lineitem("  sort", "Sort each file")
+			lineitem("  melt", "Melt this folder!")
 			lineitem("", "---------------------------")
 
 		if picked == None:
@@ -346,8 +347,9 @@ def sortfolder(response):
 				fileCount = fileCount + 1
 				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
-				if fileCount % 20 == 0 and fileCount < 100:
-					sleep(2)
+				if fileCount % 20 == 0:
+					if confirmation('See more or (exit) ') == 'exit':
+						break
 				
 		if input('Do you want to sort these files? (y/n) ') == 'y':
 			response["action"] = 'sort'
