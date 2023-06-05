@@ -79,7 +79,7 @@ def preview_file(fname):
 	
 	if exten == 'URL' and ' archive]' not in fname:
 		
-		yearInput = input('Load which year? ')
+		yearInput = input('Load which year? Leave empty to skip. ')
 		
 		if len(yearInput) > 0:
 			archiveName = fname.replace('.url', ' [' + yearInput + ' archive].url')
@@ -341,19 +341,33 @@ def sortfolder(response):
 	if response["action"] == 'list':
 	
 		fileCount = 0
-	
-		for file in globber(dircheck + "/*" + response["filter"] + '*'):
+		filelist = globber(dircheck + "/*" + response["filter"] + '*')
+
+		for file in filelist:
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
 				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0:
 					if confirmation('See more or (exit) ') == 'exit':
-						break
-				
-		if input('Do you want to sort these files? (y/n) ') == 'y':
-			response["action"] = 'sort'
-			
+						return
+	
+		options = {'':'./'}
+		options['up'] = '../'
+		
+		if response['filter'] != '':
+			options['f'] = response['filter'] + '/'
+		
+		sleep(2)
+		where = easyoptions(options, 'Where do you want to move all these files? ')
+		
+		if where != '' and where != './':
+			where = dircheck + '/' + where
+			makenewdir(where)
+		
+			for file in filelist:
+				if os.path.isfile(file):
+					movefile(file, where)
 			
 			
 	if response["action"] == 'sort':
@@ -427,6 +441,7 @@ def easyoptions(map, question):
 		
 		if columns == 3:
 			print(outstring)
+			sleep(0.01)
 			outstring = ""
 			columns = 0
 	
@@ -597,10 +612,7 @@ def sortfile(response, file):
 
 		newpath = newpath + '/' + subfolder
 		
-		if not os.path.exists(newpath):
-			os.makedirs(newpath)
-			clear_cache('getfolders')
-
+		makenewdir(newpath)
 			
 		newfilelocation = movefile(newfilelocation, newpath)
 		
@@ -615,7 +627,7 @@ def lineitem(key, value):
 	if len(key) > 0:
 		key = key + ":"
 		
-	print(key.ljust(15, " ") + value)
+	print(key.ljust(15, " ") + value[:80])
 	sleep(0.01)
 
 
@@ -638,6 +650,13 @@ def folderquery(message):
 		return entered
 		
 	return folderquery(message)
+
+
+def makenewdir(newpath):
+	if not os.path.exists(newpath):
+		os.makedirs(newpath)
+#		clear_cache()
+		print('Created folder', newpath)
 
 
 def movefile(current, dest):
