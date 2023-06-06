@@ -349,7 +349,13 @@ def sortfolder(response):
 				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0:
-					if confirmation('See more or (exit) ') == 'exit':
+					donext = confirmation('Enter to keyword for filter, or exit ')
+				
+					if donext == 'exit':
+						return
+					elif len(donext) > 0:
+						response["filter"] = donext
+						sortfolder(response)
 						return
 	
 		options = {'':'./'}
@@ -380,6 +386,8 @@ def sortfolder(response):
 				
 				if fresponse["action"] == 'exit':
 					break
+				else:
+					print('Action', fresponse['action'])
 
 
 	if response["action"] == 'common':
@@ -468,9 +476,11 @@ def easyoptions(map, question):
 
 def giveoptionset(sets):
 
+	refmap = {"up": "..", "o": "open", "exit": "exit"}
+	refmap["del"] = "delete"
+	
 	if sets == 'root':
 	
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["a"] = "is actionable"
 		refmap["s"] = "is someday"
 		refmap["r"] = "is reference"
@@ -480,7 +490,6 @@ def giveoptionset(sets):
 		
 	elif sets == 'is actionable' or sets == 'is someday':
 	
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["b"] = "books"
 		refmap["bs"] = "buy at store"
 		refmap["bo"] = "buy online"
@@ -497,7 +506,6 @@ def giveoptionset(sets):
 
 	elif sets == 'priority':
 	
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["ps"] = "purchase, product, or service"
 		refmap["lv"] = "long term value"
 		refmap["h"] = "high interest"
@@ -507,7 +515,6 @@ def giveoptionset(sets):
 		
 	elif sets == 'is reference':
 	
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
 		refmap["f"] = "finances"
 		refmap["l"] = "living-space"
 		refmap["h"] = "health"
@@ -515,10 +522,7 @@ def giveoptionset(sets):
 		refmap["r"] = "relationships"
 		refmap["s"] = "spiritual"
 		refmap["t"] = "travel"
-		
-	else:
-		refmap = {"up": "..", "o": "open", "exit": "exit"}
-		
+				
 	return refmap
 
 
@@ -586,7 +590,7 @@ def sortfile(response, file):
 	detected = detectoptionset(rootmap, file)
 	
 	if detected == 'done':
-		return {"action": "", "folder": response["folder"], "file": file}
+		return {"action": "done", "folder": response["folder"], "file": file}
 	
 	lineitem("File", pathlib.Path(file).name)
 		
@@ -607,6 +611,11 @@ def sortfile(response, file):
 		if subfolder == 'open':
 			newfilelocation = preview_file(newfilelocation)
 			return sortfile(response, newfilelocation)
+		elif subfolder == 'delete':
+			if affirmative_answer('Deleting ' + newfilelocation):
+				os.remove(newfilelocation)
+			
+			return {"action" : "delete"}
 		elif subfolder == 'exit':
 			return {"action" : "exit"}
 
@@ -638,6 +647,12 @@ def longerlineitem(key, val1, val2, val3, val4):
 def confirmation(message):
 	return input("*** " + message)
 	
+
+def affirmative_answer(message):
+	if input(message + ' Are you sure? (y/n) ') == 'y':
+		return True
+	
+	return False
 
 
 def folderquery(message):
