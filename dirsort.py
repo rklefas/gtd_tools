@@ -24,8 +24,9 @@ def globber(ex):
 
 
 def clear_cache(filter = ""):
-	for file in globber("./cache/*" + filter + "*.txt"):
-		os.remove(file)
+	if affirmative_answer('Clear the cache? '):
+		for file in globber("./cache/*" + filter + "*.txt"):
+			os.remove(file)
 
 
 def slug_path(dir):
@@ -349,9 +350,15 @@ def sortfolder(response):
 				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0:
-					donext = confirmation('Enter to keyword for filter, or exit ')
+					donext = confirmation('Enter to keyword for filter, (sort), or (exit) ')
 				
 					if donext == 'exit':
+						return
+					if donext == 'sort':
+						response["action"] = donext
+						response["filter"] = input('What is the filter? ')
+						
+						sortfolder(response)
 						return
 					elif len(donext) > 0:
 						response["filter"] = donext
@@ -478,6 +485,7 @@ def giveoptionset(sets):
 
 	refmap = {"up": "..", "o": "open", "exit": "exit"}
 	refmap["del"] = "delete"
+	refmap["od"] = "open then delete"
 	
 	if sets == 'root':
 	
@@ -589,8 +597,8 @@ def sortfile(response, file):
 	rootmap = giveoptionset('root')
 	detected = detectoptionset(rootmap, file)
 	
-	if detected == 'done':
-		return {"action": "done", "folder": response["folder"], "file": file}
+#	if detected == 'done':
+#		return {"action": "done", "folder": response["folder"], "file": file}
 	
 	lineitem("File", pathlib.Path(file).name)
 		
@@ -611,6 +619,12 @@ def sortfile(response, file):
 		if subfolder == 'open':
 			newfilelocation = preview_file(newfilelocation)
 			return sortfile(response, newfilelocation)
+		elif subfolder == 'open then delete':
+			os.startfile(newfilelocation)
+			if affirmative_answer('Deleting ' + newfilelocation):
+				os.remove(newfilelocation)
+			
+			return {"action" : "delete"}
 		elif subfolder == 'delete':
 			if affirmative_answer('Deleting ' + newfilelocation):
 				os.remove(newfilelocation)
