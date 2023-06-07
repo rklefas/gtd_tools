@@ -350,20 +350,26 @@ def sortfolder(response):
 				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
 				
 				if fileCount % 20 == 0:
-					donext = confirmation('Enter to keyword for filter, (sort), or (exit) ')
+					donext = confirmation('Enter new keyword for filter, (sort), or (exit) ')
 				
 					if donext == 'exit':
 						return
 					if donext == 'sort':
-						response["action"] = donext
-						response["filter"] = input('What is the filter? ')
-						
-						sortfolder(response)
+						sortfolder({"folder":dircheck, "action":"sort", "filter":response["filter"]})
 						return
 					elif len(donext) > 0:
-						response["filter"] = donext
-						sortfolder(response)
+						sortfolder({"folder":dircheck, "action":"list", "filter":donext})
 						return
+
+		donext = confirmation('End of list.  Enter keyword for filter, single (sort) or (bulk) sorting ')
+	
+		if donext == 'sort':
+			sortfolder({"folder":dircheck, "action":"sort", "filter":response["filter"]})
+			return
+		elif len(donext) > 0:
+			sortfolder({"folder":dircheck, "action":"list", "filter":donext})
+			return
+
 	
 		options = {'':'./'}
 		options['up'] = '../'
