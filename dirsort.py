@@ -366,27 +366,32 @@ def sortfolder(response):
 		if donext == 'sort':
 			sortfolder({"folder":dircheck, "action":"sort", "filter":response["filter"]})
 			return
+		elif donext == 'bulk':
+
+			options = {'':'./'}
+			options['up'] = '../'
+			options['t'] = 'trash/'
+			
+			if response['filter'] != '':
+				options['f'] = response['filter'] + '/'
+			
+			where = easyoptions(options, 'Where do you want to move all these files? ')
+			
+			if where != '' and where != './':
+				where = dircheck + '/' + where
+				makenewdir(where)
+			
+				for file in filelist:
+					if os.path.isfile(file):
+						movefile(file, where)
+						
+			return
+
 		elif len(donext) > 0:
 			sortfolder({"folder":dircheck, "action":"list", "filter":donext})
 			return
 
 	
-		options = {'':'./'}
-		options['up'] = '../'
-		
-		if response['filter'] != '':
-			options['f'] = response['filter'] + '/'
-		
-		sleep(2)
-		where = easyoptions(options, 'Where do you want to move all these files? ')
-		
-		if where != '' and where != './':
-			where = dircheck + '/' + where
-			makenewdir(where)
-		
-			for file in filelist:
-				if os.path.isfile(file):
-					movefile(file, where)
 			
 			
 	if response["action"] == 'sort':
