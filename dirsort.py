@@ -95,9 +95,9 @@ def preview_file(fname):
 			text_file.write(data)
 			text_file.close()
 
-			os.startfile(archiveName)
+			openfile(archiveName)
 			
-		os.startfile(fname)
+		openfile(fname)
 
 	elif exten == 'MP3':
 			
@@ -131,7 +131,7 @@ def preview_file(fname):
 			
 	else:
 		print(exten, ' extension loading using default program')
-		os.startfile(fname)
+		openfile(fname)
 
 		
 		
@@ -487,6 +487,21 @@ def easyoptions(map, question):
 	
 	if value != '' and value != None:
 		return value
+	
+	if len(inputx) > 2:
+		manylist = []
+		
+		for value in map.values():
+			checkon = value[0:(len(inputx))]
+		
+			if inputx == checkon:
+				lineitem('Match '+ checkon + ' on', value)
+				sleep(1)
+				manylist.append(value)
+		
+		if len(manylist) == 1:
+			if affirmative_answer('Found a good match.  Do you want to use it? '):
+				return manylist[0]
 
 	return easyoptions(map, question)
 
@@ -631,14 +646,16 @@ def sortfile(response, file):
 			newfilelocation = preview_file(newfilelocation)
 			return sortfile(response, newfilelocation)
 		elif subfolder == 'open then delete':
-			os.startfile(newfilelocation)
+			openfile(newfilelocation)
 			if affirmative_answer('Deleting ' + newfilelocation):
 				os.remove(newfilelocation)
-			
+				do_log(' DEL ' + newfilelocation)
+
 			return {"action" : "delete"}
 		elif subfolder == 'delete':
 			if affirmative_answer('Deleting ' + newfilelocation):
 				os.remove(newfilelocation)
+				do_log(' DEL ' + newfilelocation)
 			
 			return {"action" : "delete"}
 		elif subfolder == 'exit':
@@ -695,15 +712,20 @@ def folderquery(message):
 def makenewdir(newpath):
 	if not os.path.exists(newpath):
 		os.makedirs(newpath)
-#		clear_cache()
 		print('Created folder', newpath)
+		clear_cache()
 
+
+def openfile(filename):
+	os.startfile(filename)
+	do_log('OPEN ' + filename)
+	
 
 def movefile(current, dest):
 
 	if pathlib.Path(current).name == 'Thumbs.db':
 		os.remove(current)
-		do_log('DELETE ' + current)
+		do_log(' DEL ' + current)
 		return ''
 
 	dest = str(dest) + "/" + pathlib.Path(current).name
@@ -756,5 +778,5 @@ while True:
 		
 	except Exception as e:
 		print(e)
-		confirmation('The system has recoved from a major failure')
+		confirmation('The program has recovered from an exception')
 
