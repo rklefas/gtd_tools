@@ -273,6 +273,9 @@ def pickfolder(starting):
 				try:
 					picked = int(tmp)
 				except:
+					if os.path.isdir(dircheck + '/' + tmp):
+						dircheck = os.path.abspath(dircheck + '/' + tmp)
+
 					continue
 
 		folders = 0
@@ -327,7 +330,10 @@ def foldersummary(dircheck):
 
 		golist = {"path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
 		
-		return dirput('foldersummary', dircheck, golist)
+		if files > 100:
+			return dirput('foldersummary', dircheck, golist)
+		else:
+			return golist
 
 
 
@@ -456,7 +462,7 @@ def sortfolder(response):
 
 
 
-def easyoptions(map, question):
+def easyoptions(map, question, p_columns = 3):
 
 	columns = 0
 	outstring = ""
@@ -465,7 +471,7 @@ def easyoptions(map, question):
 		outstring = outstring + str('  ' + key + ' = ' + map[key]).ljust(30, " ")
 		columns = columns + 1
 		
-		if columns == 3:
+		if columns == p_columns:
 			print(outstring)
 			sleep(0.01)
 			outstring = ""
@@ -476,7 +482,11 @@ def easyoptions(map, question):
 	lineitem('other', 'enter a custom value not listed')
 	print("")
 	inputx = input(question)
-	
+
+	if inputx == 'x-columns':
+		input_col = int(input('Number of columns? '))
+		return easyoptions(map, question, input_col)
+
 	if inputx == '':
 		return inputx
 	
@@ -503,13 +513,13 @@ def easyoptions(map, question):
 			if affirmative_answer('Found a good match.  Do you want to use it? '):
 				return manylist[0]
 
-	return easyoptions(map, question)
+	return easyoptions(map, question, p_columns)
 
 
 
 def giveoptionset(sets):
 
-	refmap = {"up": "..", "o": "open", "exit": "exit"}
+	refmap = {"up":"..", "o":"open", "exit":"exit"}
 	refmap["del"] = "delete"
 	refmap["od"] = "open then delete"
 	
