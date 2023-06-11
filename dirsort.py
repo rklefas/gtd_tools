@@ -179,13 +179,17 @@ def getfolders(dircheck):
 		golist = {"0": ".."}
 
 		folders = 0
+		items = globber(dircheck+"/*")
 
-		for file in globber(dircheck+"/*"):
+		for file in items:
 			if os.path.isdir(file):
 				folders = folders + 1
 				golist[str(folders)] = pathlib.Path(file).stem
 
-		return dirput('getfolders', dircheck, golist)
+		if len(items) > 100:
+			return dirput('getfolders', dircheck, golist)
+		else:
+			return golist
 
 
 def pickfolder(starting):
@@ -265,10 +269,11 @@ def pickfolder(starting):
 			elif tmp == 'clear' or tmp == 'common' or tmp == 'melt':
 				return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
-			
 				filter = input("Filter by filename? ")
-			
 				return {"action" : "sort", "filter": filter, "folder" : os.path.abspath(dircheck)}
+			elif tmp == 'sort-dirs':
+				filter = input("Filter by folder name? ")			
+				return {"action" : "sort-dirs", "filter": filter, "folder" : os.path.abspath(dircheck)}
 			else:
 				try:
 					picked = int(tmp)
@@ -400,18 +405,23 @@ def sortfolder(response):
 	
 			
 			
-	if response["action"] == 'sort':
+	if response["action"] == 'sort' or response["action"] == 'sort-dirs':
 		for file in globber(dircheck + "/*" + response["filter"] + '*'):
-			if os.path.isfile(file):
-				
-				lineitem("Directory", os.path.abspath(dircheck))
-				
-				fresponse = sortfile(response, file)
-				
-				if fresponse["action"] == 'exit':
-					break
-				else:
-					print('Action', fresponse['action'])
+		
+			if os.path.isfile(file) and response["action"] == 'sort-dirs':
+				continue
+
+			if os.path.isdir(file) and response["action"] == 'sort':
+				continue
+
+			lineitem("Directory", os.path.abspath(dircheck))
+			
+			fresponse = sortfile(response, file)
+			
+			if fresponse["action"] == 'exit':
+				break
+			else:
+				print('Action', fresponse['action'])
 
 
 	if response["action"] == 'common':
@@ -688,7 +698,7 @@ def lineitem(key, value):
 	if len(key) > 0:
 		key = key + ":"
 		
-	print(key.ljust(15, " ") + value[:80])
+	print(datetime.now().strftime("  %M:%S ") + key.ljust(15, " ") + value[:80])
 	sleep(0.01)
 
 
