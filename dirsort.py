@@ -17,11 +17,19 @@ def globber(ex):
 	xx = sorted(glob.glob(ex))
 	second = datetime.now().strftime("%H:%M:%S")
 
-	if first != second:
-		print(first, second, ex)
+#	if first != second:
+#		print(first, second, ex)
 
 	return xx
 
+
+def show_file_and_metadata(heading, item):
+
+	if os.path.isfile(item):
+		print('  ' + heading + ' >> ' + pathlib.Path(item).name + '   ' + human_readable_size(os.path.getsize(item)))
+	else:
+		print('  ' + heading + ' >> ' + item)
+		
 
 def clear_cache(filter = ""):
 	if affirmative_answer('Clear the cache? '):
@@ -47,12 +55,12 @@ def dirfetch(type, dir):
 def dirput(type, dir, data):
 	dateX = slug_path(dir)	
 	file = 'cache/' + type + '-' + dateX + ".txt"
-	
-	print('Created', file)
-	
+		
 	fp = open(file, "w")
 	json.dump(data, fp, indent=2)
 	fp.close()
+
+	show_file_and_metadata('Created', file)
 
 	return dirfetch(type, dir)
   
@@ -192,7 +200,7 @@ def getfolders(dircheck):
 			return golist
 
 
-def pickfolder(starting):
+def pickfolder(starting, maxshow):
 
 	# debug_print("in pickfolder")
 
@@ -235,8 +243,10 @@ def pickfolder(starting):
 
 			longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
 			
-			if folders > 0 and folders % 20 == 0 and folders < 100:
-				sleep(2)
+			if folders > 0 and folders % maxshow == 0:
+				if affirmative_answer('Show more...') == False:
+					break
+				
 				
 			folders = folders + 1
 
@@ -358,7 +368,7 @@ def sortfolder(response):
 		for file in filelist:
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
-				lineitem("	File " + str(fileCount), pathlib.Path(file).name)
+				show_file_and_metadata(str(fileCount), file)
 				
 				if fileCount % 20 == 0:
 					donext = confirmation('Enter new keyword for filter, (sort), or (exit) ')
@@ -541,6 +551,8 @@ def giveoptionset(sets):
 		refmap["c"] = "is completed"
 		refmap["t"] = "is trash"
 		refmap["n"] = "is not sure"
+		refmap["tw"] = "to watch"
+		refmap["tr"] = "to read"
 		
 	elif sets == 'is actionable' or sets == 'is someday':
 	
@@ -646,7 +658,7 @@ def sortfile(response, file):
 #	if detected == 'done':
 #		return {"action": "done", "folder": response["folder"], "file": file}
 	
-	lineitem("File", pathlib.Path(file).name)
+	show_file_and_metadata("Sort Options For", file)
 		
 	newpath = response["folder"]
 	newfilelocation = file
@@ -737,6 +749,13 @@ def makenewdir(newpath):
 
 
 def openfile(filename):
+
+	if pathlib.Path(filename).suffix.strip(".").upper() == 'URL':
+		day = datetime.today().strftime('%A')
+		if day == 'Sunday' or day == 'Saturday':
+			print('Make sure you are working on projects today...')
+			sleep(30)
+		
 	os.startfile(filename)
 	do_log('OPEN ' + filename)
 	
@@ -784,7 +803,7 @@ while True:
 	# debug_print("in main loop")
 		
 	try:
-		response = pickfolder(dircheck)
+		response = pickfolder(dircheck, 20)
 
 		if response["action"] == 'exit':
 			clear_cache()
