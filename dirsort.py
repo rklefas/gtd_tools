@@ -26,7 +26,7 @@ def globber(ex):
 def show_file_and_metadata(heading, item):
 
 	if os.path.isfile(item):
-		print('  ' + heading + ' >> ' + pathlib.Path(item).name + '   ' + human_readable_size(os.path.getsize(item)))
+		print('  ' + heading + ' >> ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '  ' + pathlib.Path(item).name)
 	else:
 		print('  ' + heading + ' >> ' + item)
 		
@@ -225,7 +225,7 @@ def pickfolder(starting, maxshow):
 			thisSummary = foldersummary(dircheck + '/' + file)				
 			
 			if thisSummary["folders"] > 0:
-				folderItem = "Folders: " + str(thisSummary["folders"])
+				folderItem = "Dirs: " + str(thisSummary["folders"])
 			else:
 				folderItem = ""
 			
@@ -237,7 +237,7 @@ def pickfolder(starting, maxshow):
 				fileItem = ""
 
 			if thisSummary["files"] > 0:
-				sizeItem = "Size: " + human_readable_size(thisSummary["size"], 1)
+				sizeItem = " (" + human_readable_size(thisSummary["size"], 1) + ")"
 			else:
 				sizeItem = ""
 
@@ -290,6 +290,8 @@ def pickfolder(starting, maxshow):
 				except:
 					if os.path.isdir(dircheck + '/' + tmp):
 						dircheck = os.path.abspath(dircheck + '/' + tmp)
+					else:
+						confirmation(tmp + ' does not exist')
 
 					continue
 
@@ -303,12 +305,12 @@ def pickfolder(starting, maxshow):
 
 
 def human_readable_size(size, decimal_places=2):
-	for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
+	for unit in ['B  ', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']:
 		if size < 1024.0 or unit == 'PiB':
 			break
 		size /= 1024.0
 	
-	if unit == 'B':
+	if unit == 'B  ':
 		decimal_places = 0
 		
 	return f"{size:.{decimal_places}f} {unit}"
@@ -368,7 +370,7 @@ def sortfolder(response):
 		for file in filelist:
 			if os.path.isfile(file):
 				fileCount = fileCount + 1
-				show_file_and_metadata(str(fileCount), file)
+				show_file_and_metadata(str(fileCount).rjust(4, " "), file)
 				
 				if fileCount % 20 == 0:
 					donext = confirmation('Enter new keyword for filter, (sort), or (exit) ')
@@ -715,7 +717,7 @@ def lineitem(key, value):
 
 
 def longerlineitem(key, val1, val2, val3, val4):
-	lineitem(key, val1.ljust(30, " ") + val2.ljust(15, " ") + val3.ljust(15, " ") + val4)
+	lineitem(key, val1.ljust(35, " ") + val2.ljust(15, " ") + val3.ljust(15, " ") + val4)
 
 
 def confirmation(message):
