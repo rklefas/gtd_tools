@@ -9,6 +9,7 @@ import random
 import re
 import json
 from collections import Counter
+import shutil
 
 
 def globber(ex):
@@ -24,12 +25,14 @@ def globber(ex):
 
 
 def show_file_and_metadata(heading, item):
-
 	if os.path.isfile(item):
-		print('  ' + heading + ' >> ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '  ' + pathlib.Path(item).name)
+		print('  ' + heading + ' >> ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
 	else:
-		print('  ' + heading + ' >> ' + item)
+		print('  ' + heading + ' >> ' + os.path.abspath(item))
 		
+
+def render_int_for_grid(intval):
+	return str(intval).rjust(4, " ")
 
 def clear_cache(filter = ""):
 	if affirmative_answer('Clear the cache? '):
@@ -60,7 +63,7 @@ def dirput(type, dir, data):
 	json.dump(data, fp, indent=2)
 	fp.close()
 
-	show_file_and_metadata('Created', file)
+	show_file_and_metadata('Cache File', file)
 
 	return dirfetch(type, dir)
   
@@ -210,7 +213,7 @@ def pickfolder(starting, maxshow):
 
 		picked = None
 		folders = 0
-		lineitem("Currently in", dircheck)
+		show_file_and_metadata("Currently in", dircheck)
 
 		topSummary = foldersummary(dircheck)
 		gotten = getfolders(dircheck)
@@ -219,25 +222,24 @@ def pickfolder(starting, maxshow):
 		for file in gotten.values():
 			thisSummary = foldersummary(dircheck + '/' + file)				
 
+		longerlineitem("", "-- FOLDER NAME ----------", "* FOLDERS *", "* FILES *", "* SIZE *")
 
 		for file in gotten.values():
 
 			thisSummary = foldersummary(dircheck + '/' + file)				
 			
 			if thisSummary["folders"] > 0:
-				folderItem = "Dirs: " + str(thisSummary["folders"])
+				folderItem = render_int_for_grid(thisSummary["folders"])
 			else:
 				folderItem = ""
 			
-			if thisSummary["files"] > 20:
-				fileItem = "! Files: " + str(thisSummary["files"])
-			elif thisSummary["files"] > 0:
-				fileItem = "Files: " + str(thisSummary["files"])
+			if thisSummary["files"] > 0:
+				fileItem = render_int_for_grid(thisSummary["files"])
 			else:
 				fileItem = ""
 
 			if thisSummary["files"] > 0:
-				sizeItem = " (" + human_readable_size(thisSummary["size"], 1) + ")"
+				sizeItem = human_readable_size(thisSummary["size"], 1)
 			else:
 				sizeItem = ""
 
@@ -246,35 +248,32 @@ def pickfolder(starting, maxshow):
 			if folders > 0 and folders % maxshow == 0:
 				if affirmative_answer('Show more...') == False:
 					break
+				else:
+					longerlineitem("", "-- FOLDER NAME ----------", "* FOLDERS *", "* FILES *", "* SIZE *")
+
 				
 				
 			folders = folders + 1
 
 		
 		if topSummary["files"] > 0:
-			lineitem("", "---------------------------")
-			lineitem("  common", "Show common keywords in filenames")
-			lineitem("  list", "List " + str(topSummary["files"]) + " files!")
+			lineitem("", "-------------------------------------")
+			lineitem("  Files", "List " + str(topSummary["files"]) + " files!")
 			
 			for xx in topSummary["extensions"]:
-				lineitem("    ." + str(xx), str(topSummary["extensions"].get(xx)))
-				
-			lineitem("  sort", "Sort each file")
-			lineitem("  melt", "Melt this folder!")
-			lineitem("", "---------------------------")
+				lineitem("    ." + str(xx), str(topSummary["extensions"].get(xx)))	
 
 		if picked == None:
 		
-			tmp = folderquery("Which folder do you want to enter? ")
+			lineitem("", "-------------------------------------")
+			tmp = folderquery("Select an option (sort sort-dirs melt common clear list) or pick a folder: ")
 			
 			if tmp == 'exit':
 				return {"action" : "exit"}
 			elif tmp == '..':
 				picked = 0
 			elif tmp == 'list':
-
-				filter = input("Filter by filename? ")
-			
+				filter = ''
 				return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'clear' or tmp == 'common' or tmp == 'melt':
 				return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
@@ -364,6 +363,7 @@ def sortfolder(response):
 					
 	if response["action"] == 'list':
 	
+		columns, rows = shutil.get_terminal_size()
 		fileCount = 0
 		filelist = globber(dircheck + "/*" + response["filter"] + '*')
 
@@ -372,7 +372,7 @@ def sortfolder(response):
 				fileCount = fileCount + 1
 				show_file_and_metadata(str(fileCount).rjust(4, " "), file)
 				
-				if fileCount % 20 == 0:
+				if fileCount % (rows - 2) == 0:
 					donext = confirmation('Enter new keyword for filter, (sort), or (exit) ')
 				
 					if donext == 'exit':
@@ -418,7 +418,9 @@ def sortfolder(response):
 			
 			
 	if response["action"] == 'sort' or response["action"] == 'sort-dirs':
-		for file in globber(dircheck + "/*" + response["filter"] + '*'):
+		globpattern = dircheck + "/*" + response["filter"] + '*'
+	
+		for file in globber(globpattern):
 		
 			if os.path.isfile(file) and response["action"] == 'sort-dirs':
 				continue
@@ -426,14 +428,14 @@ def sortfolder(response):
 			if os.path.isdir(file) and response["action"] == 'sort':
 				continue
 
-			lineitem("Directory", os.path.abspath(dircheck))
+			lineitem("Filter Applied", globpattern)
 			
 			fresponse = sortfile(response, file)
 			
 			if fresponse["action"] == 'exit':
 				break
 			else:
-				print('Action', fresponse['action'])
+				lineitem('Action', fresponse['action'])
 
 
 	if response["action"] == 'common':
@@ -544,6 +546,7 @@ def giveoptionset(sets):
 	refmap = {"up":"..", "o":"open", "exit":"exit"}
 	refmap["del"] = "delete"
 	refmap["od"] = "open then delete"
+	refmap["pl"] = "play"
 	
 	if sets == 'root':
 	
@@ -679,6 +682,9 @@ def sortfile(response, file):
 		if subfolder == 'open':
 			newfilelocation = preview_file(newfilelocation)
 			return sortfile(response, newfilelocation)
+		elif subfolder == 'play':
+			openfile(newfilelocation)
+			return sortfile(response, newfilelocation)
 		elif subfolder == 'open then delete':
 			openfile(newfilelocation)
 			if affirmative_answer('Deleting ' + newfilelocation):
@@ -710,14 +716,14 @@ def sortfile(response, file):
 def lineitem(key, value):
 
 	if len(key) > 0:
-		key = key + ":"
+		key = key + ": "
 		
 	print(datetime.now().strftime("  %M:%S ") + key.ljust(15, " ") + value[:80])
 	sleep(0.01)
 
 
 def longerlineitem(key, val1, val2, val3, val4):
-	lineitem(key, val1.ljust(35, " ") + val2.ljust(15, " ") + val3.ljust(15, " ") + val4)
+	lineitem(key, val1.ljust(35, " ") + val2.rjust(15, " ") + val3.rjust(15, " ") + val4.rjust(15, " "))
 
 
 def confirmation(message):
@@ -746,7 +752,7 @@ def folderquery(message):
 def makenewdir(newpath):
 	if not os.path.exists(newpath):
 		os.makedirs(newpath)
-		print('Created folder', newpath)
+		show_file_and_metadata('Created folder', newpath)
 		clear_cache()
 
 
@@ -778,10 +784,10 @@ def movefile(current, dest):
 		if os.path.isfile(dest):
 			dest = dest + '-' + str(random.randrange(1000,9999)) + '.duplicate'
 
-		lineitem('Current', current)
-		lineitem('Destination', dest)
-		
+		show_file_and_metadata('File to Move', current)
+		show_file_and_metadata('Current', pathlib.Path(current).parent)
 		os.rename(current, dest)
+		show_file_and_metadata('Destination', pathlib.Path(dest).parent)
 		
 		do_log('MOVE ' + current)
 		do_log('  TO ' + dest)
@@ -803,9 +809,11 @@ else:
 while True:
 
 	# debug_print("in main loop")
-		
+	
+	columns, rows = shutil.get_terminal_size()
+	
 	try:
-		response = pickfolder(dircheck, 20)
+		response = pickfolder(dircheck, rows - 4)
 
 		if response["action"] == 'exit':
 			clear_cache()
