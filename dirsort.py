@@ -565,19 +565,32 @@ def giveoptionset(sets):
 		refmap["tr"] = "to read"
 		
 	elif sets == 'is actionable' or sets == 'is someday':
+
+		refmap["h"] = "at home"
+		refmap["c"] = "at computer"
+		refmap["o"] = "outside"
 	
+	elif sets == 'at computer':
+
 		refmap["b"] = "books"
-		refmap["bs"] = "buy at store"
 		refmap["bo"] = "buy online"
 		refmap["ed"] = "education-classes"
 		refmap["e"] = "events"
-		refmap["ex"] = "expert service"
+		refmap["ex"] = "expert consultation"
 		refmap["me"] = "find an outlet for media"
-		refmap["p"] = "places"
-		refmap["r"] = "read"
+		refmap["r"] = "do web research"
+		
+	elif sets == 'outside':
+		
+		refmap["bs"] = "buy at store"
+		refmap["ed"] = "education-classes"
+		refmap["e"] = "events"
+		refmap["ex"] = "expert consultation"
+		refmap["r"] = "restaurants"
+		
+	elif sets == 'at home':
+		
 		refmap["re"] = "recipe"
-		refmap["c"] = "research at computer"
-		refmap["w"] = "watch"
 		refmap["wr"] = "write to list"
 
 	elif sets == 'priority':
@@ -620,10 +633,10 @@ def detectoptionset(timeframes, file):
 			return 'basic'
 		elif timeframes[key] == pathlib.Path(file).parent.stem:
 			return timeframes[key]
-		elif timeframes[key] == pathlib.Path(file).parent.parent.stem:
-			return "priority"
+		elif 'is actionable' == pathlib.Path(file).parent.parent.stem:
+			return pathlib.Path(file).parent.stem
 		elif timeframes[key] == pathlib.Path(file).parent.parent.parent.stem:
-			return "done"
+			return "priority"
 		elif timeframes[key] == pathlib.Path(file).parent.parent.parent.parent.stem:
 			return "done"
 		
