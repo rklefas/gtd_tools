@@ -27,14 +27,19 @@ def globber(ex):
 
 def show_file_and_metadata(heading, item):
 
-	modification_time = os.path.getmtime(item)
-	local_time = time.ctime(modification_time)
-
 	if os.path.isfile(item):
-		print('  ' + heading + ' >> ' + local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
-	else:
-		print('  ' + heading + ' >> ' + local_time + '  <DIR> ' + os.path.abspath(item))
+		modification_time = os.path.getmtime(item)
+		local_time = time.ctime(modification_time)
 		
+		print('  ' + heading + ' >> ' + local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
+	elif os.path.isdir(item):
+		modification_time = os.path.getmtime(item)
+		local_time = time.ctime(modification_time)
+
+		print('  ' + heading + ' >> ' + local_time + '  <DIR> ' + os.path.abspath(item))
+	else:
+		print('  MISSING >> ' + item)
+
 
 def render_int_for_grid(intval):
 	return str(intval).rjust(4, " ")
@@ -467,9 +472,7 @@ def sortfolder(response):
 		clear_cache()
 
 	if response["action"] == 'melt':
-	
-		print(response)
-		
+			
 		append = input('What do you want to append to the file names? ')
 	
 		for file in globber(dircheck+"/*"):
