@@ -10,6 +10,7 @@ import re
 import json
 from collections import Counter
 import shutil
+import time
 
 
 def globber(ex):
@@ -25,10 +26,14 @@ def globber(ex):
 
 
 def show_file_and_metadata(heading, item):
+
+	modification_time = os.path.getmtime(item)
+	local_time = time.ctime(modification_time)
+
 	if os.path.isfile(item):
-		print('  ' + heading + ' >> ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
+		print('  ' + heading + ' >> ' + local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
 	else:
-		print('  ' + heading + ' >> ' + os.path.abspath(item))
+		print('  ' + heading + ' >> ' + local_time + '  <DIR> ' + os.path.abspath(item))
 		
 
 def render_int_for_grid(intval):
@@ -216,15 +221,15 @@ def pickfolder(starting, maxshow):
 		show_file_and_metadata("Currently in", dircheck)
 
 		topSummary = foldersummary(dircheck)
-		gotten = getfolders(dircheck)
+		gotten = getfolders(dircheck).values()
 
 		# Preload cache data
-		for file in gotten.values():
+		for file in gotten:
 			thisSummary = foldersummary(dircheck + '/' + file)				
 
 		longerlineitem("", "-- FOLDER NAME ----------", "* FOLDERS *", "* FILES *", "* SIZE *")
 
-		for file in gotten.values():
+		for file in gotten:
 
 			thisSummary = foldersummary(dircheck + '/' + file)				
 			
@@ -246,7 +251,7 @@ def pickfolder(starting, maxshow):
 			longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
 			
 			if folders > 0 and folders % maxshow == 0:
-				if affirmative_answer('Show more...') == False:
+				if affirmative_answer('Stop listing folders...') == True:
 					break
 				else:
 					longerlineitem("", "-- FOLDER NAME ----------", "* FOLDERS *", "* FILES *", "* SIZE *")
@@ -760,7 +765,7 @@ def openfile(filename):
 
 	if pathlib.Path(filename).suffix.strip(".").upper() == 'URL':
 		day = datetime.today().strftime('%A')
-		if day == 'Sunday' or day == 'Saturday':
+		if day == day:
 			print('Make sure you are working on projects today...')
 			sleep(30)
 		
