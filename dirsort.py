@@ -27,14 +27,16 @@ def globber(ex):
 
 def show_file_and_metadata(heading, item):
 
+	format = '%a %Y %b %d'
+
 	if os.path.isfile(item):
-		modification_time = os.path.getmtime(item)
-		local_time = time.ctime(modification_time)
+		modification_time = time.localtime(os.path.getmtime(item))
+		local_time = time.strftime(format, modification_time)
 		
 		print('  ' + heading + ' >> ' + local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
 	elif os.path.isdir(item):
-		modification_time = os.path.getmtime(item)
-		local_time = time.ctime(modification_time)
+		modification_time = time.localtime(os.path.getmtime(item))
+		local_time = time.strftime(format, modification_time)
 
 		print('  ' + heading + ' >> ' + local_time + '  <DIR> ' + os.path.abspath(item))
 	else:
@@ -45,8 +47,10 @@ def render_int_for_grid(intval):
 	return str(intval).rjust(4, " ")
 
 def clear_cache(filter = ""):
-	if affirmative_answer('Clear the cache? '):
-		for file in globber("./cache/*" + filter + "*.txt"):
+	pattern = "./cache/*" + filter + "*.json"
+
+	if affirmative_answer('Clear the cache?  Pattern to use: ' + pattern):
+		for file in globber(pattern):
 			os.remove(file)
 
 
@@ -61,13 +65,13 @@ def slug_path(dir):
 
 def dirfetch(type, dir):
 	dateX = slug_path(dir)
-	fp = open('cache/' + type + '-' + dateX + ".txt", "r")
+	fp = open('cache/' + type + '-' + dateX + ".json", "r")
 	return json.load(fp)
 
 
 def dirput(type, dir, data):
 	dateX = slug_path(dir)	
-	file = 'cache/' + type + '-' + dateX + ".txt"
+	file = 'cache/' + type + '-' + dateX + ".json"
 		
 	fp = open(file, "w")
 	json.dump(data, fp, indent=2)
@@ -341,7 +345,7 @@ def foldersummary(dircheck):
 		
 			if os.path.isfile(file):
 			
-				exten = pathlib.Path(file).suffix.strip(".")	
+				exten = pathlib.Path(file).suffix.strip(".").lower()
 				value = extensions.get(exten)
 		
 				if value == None:
@@ -544,6 +548,8 @@ def easyoptions(map, question, p_columns = 3):
 		if len(manylist) == 1:
 			if affirmative_answer('Found a good match.  Do you want to use it? '):
 				return manylist[0]
+
+	input('Not a valid option: ' + inputx)
 
 	return easyoptions(map, question, p_columns)
 
