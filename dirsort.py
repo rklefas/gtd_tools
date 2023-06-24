@@ -11,12 +11,47 @@ import json
 from collections import Counter
 import shutil
 import time
+import random
 
 
-def globber(ex):
+def globber(ex, method = 'name'):
 
 	first = datetime.now().strftime("%H:%M:%S")
-	xx = sorted(glob.glob(ex))
+
+	xx = glob.glob(ex)
+
+	if method == 'ask' and len(xx) > 3:
+		options = {}
+		options['da'] = 'date asc'
+		options['sa'] = 'size asc'
+		options['na'] = 'name asc'
+		options['dd'] = 'date desc'
+		options['sd'] = 'size desc'
+		options['nd'] = 'name desc'
+		options['r'] = 'random'
+	
+		option = easyoptions(options, 'How do you want to sort the files? ')
+	else:
+		option = method
+		
+	if option == 'random':
+		random.shuffle(xx)
+	elif option == 'size asc':
+		xx = sorted(xx, key=os.path.getsize)
+	elif option == 'date asc':
+		xx = sorted(xx, key=os.path.getmtime)
+	elif option == 'name asc':
+		xx = sorted(xx)
+	elif option == 'size desc':
+		xx = sorted(xx, key=os.path.getsize)
+		xx.reverse()
+	elif option == 'date desc':
+		xx = sorted(xx, key=os.path.getmtime)
+		xx.reverse()
+	elif option == 'name desc':
+		xx = sorted(xx)
+		xx.reverse()
+		
 	second = datetime.now().strftime("%H:%M:%S")
 
 #	if first != second:
@@ -274,8 +309,12 @@ def pickfolder(starting, maxshow):
 			linedivider()
 			lineitem("  Files", "List " + str(topSummary["files"]) + " files!")
 			
+			comboline = ""
+
 			for xx in topSummary["extensions"]:
-				lineitem("    ." + str(xx), str(topSummary["extensions"].get(xx)))	
+				comboline = comboline + xx + ":" + str(topSummary["extensions"].get(xx)) + " "	
+
+			lineitem("", comboline)
 
 		if picked == None:
 		
@@ -379,7 +418,7 @@ def sortfolder(response):
 	
 		columns, rows = shutil.get_terminal_size()
 		fileCount = 0
-		filelist = globber(dircheck + "/*" + response["filter"] + '*')
+		filelist = globber(dircheck + "/*" + response["filter"] + '*', 'ask')
 
 		for file in filelist:
 			if os.path.isfile(file):
