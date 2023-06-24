@@ -33,14 +33,14 @@ def show_file_and_metadata(heading, item):
 		modification_time = time.localtime(os.path.getmtime(item))
 		local_time = time.strftime(format, modification_time)
 		
-		print('  ' + heading + ' >> ' + local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
+		lineitem(heading, local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
 	elif os.path.isdir(item):
 		modification_time = time.localtime(os.path.getmtime(item))
 		local_time = time.strftime(format, modification_time)
 
-		print('  ' + heading + ' >> ' + local_time + '  <DIR> ' + os.path.abspath(item))
+		lineitem(heading, local_time + '   <DIR>       ' + os.path.abspath(item))
 	else:
-		print('  MISSING >> ' + item)
+		lineitem('<MISSING>', item)
 
 
 def render_int_for_grid(intval):
@@ -257,7 +257,7 @@ def pickfolder(starting, maxshow):
 			else:
 				sizeItem = ""
 
-			longerlineitem("  Browse " + str(folders), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
+			longerlineitem("<DIR> " + str(folders).rjust(2, " "), pathlib.Path(file).stem, folderItem, fileItem, sizeItem)
 			
 			if folders > 0 and folders % maxshow == 0:
 				if affirmative_answer('Stop listing folders...') == True:
@@ -271,7 +271,7 @@ def pickfolder(starting, maxshow):
 
 		
 		if topSummary["files"] > 0:
-			lineitem("", "-------------------------------------")
+			linedivider()
 			lineitem("  Files", "List " + str(topSummary["files"]) + " files!")
 			
 			for xx in topSummary["extensions"]:
@@ -279,7 +279,7 @@ def pickfolder(starting, maxshow):
 
 		if picked == None:
 		
-			lineitem("", "-------------------------------------")
+			linedivider()
 			tmp = folderquery("Select an option (sort sort-dirs melt common clear list) or pick a folder: ")
 			
 			if tmp == 'exit':
@@ -742,12 +742,16 @@ def sortfile(response, file):
 		
 def lineitem(key, value):
 
-	if len(key) > 0:
-		key = key + ": "
+#	if len(key) > 0:
+	key = key + " | "
 		
-	print(datetime.now().strftime("  %M:%S ") + key.ljust(15, " ") + value[:80])
+#	print(datetime.now().strftime("  %M:%S ") + key.rjust(15, " ") + value[:80])
+	print(key.rjust(20, " ") + value[:100])
 	sleep(0.01)
 
+
+def linedivider():
+	lineitem("", "-------------------------------------")
 
 def longerlineitem(key, val1, val2, val3, val4):
 	lineitem(key, val1.ljust(35, " ") + val2.rjust(15, " ") + val3.rjust(15, " ") + val4.rjust(15, " "))
@@ -811,10 +815,12 @@ def movefile(current, dest):
 		if os.path.isfile(dest):
 			dest = dest + '-' + str(random.randrange(1000,9999)) + '.duplicate'
 
+		linedivider()
 		show_file_and_metadata('File to Move', current)
 		show_file_and_metadata('Current', pathlib.Path(current).parent)
 		os.rename(current, dest)
 		show_file_and_metadata('Destination', pathlib.Path(dest).parent)
+		linedivider()
 		
 		do_log('MOVE ' + current)
 		do_log('  TO ' + dest)
