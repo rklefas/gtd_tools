@@ -30,7 +30,7 @@ def globber(ex, method = 'name'):
 		options['nd'] = 'name desc'
 		options['r'] = 'random'
 	
-		option = easyoptions(options, 'How do you want to sort the files? ')
+		option = easyoptions(options, 'How do you want to sort the (' + str(len(xx)) + ') results? ')
 	else:
 		option = method
 		
@@ -82,10 +82,11 @@ def render_int_for_grid(intval):
 	return str(intval).rjust(4, " ")
 
 def clear_cache(filter = ""):
-	pattern = "./cache/*" + filter + "*.json"
+	pattern = "./cache/*" + filter + ".json"
+	files = globber(pattern)
 
-	if affirmative_answer('Clear the cache?  Pattern to use: ' + pattern):
-		for file in globber(pattern):
+	if affirmative_answer('Clear the cache?  Files: ' + str(len(files)) + ' -- Pattern to use: ' + pattern):
+		for file in files:
 			os.remove(file)
 
 
@@ -616,7 +617,7 @@ def giveoptionset(sets):
 
 		refmap["h"] = "at home"
 		refmap["c"] = "at computer"
-		refmap["o"] = "outside"
+		refmap["o"] = "at outside"
 	
 	elif sets == 'at computer':
 
@@ -628,7 +629,7 @@ def giveoptionset(sets):
 		refmap["me"] = "find an outlet for media"
 		refmap["r"] = "do web research"
 		
-	elif sets == 'outside':
+	elif sets == 'at outside':
 		
 		refmap["bs"] = "buy at store"
 		refmap["ed"] = "education-classes"
@@ -778,7 +779,11 @@ def sortfile(response, file):
 	return {"action": "moved", "folder": newpath, "file": newfilelocation}
 
 		
-		
+def explain_sleep(tx):
+	print('Will wait for ' + str(tx) + ' seconds')
+	sleep(tx)
+
+
 def lineitem(key, value):
 
 #	if len(key) > 0:
@@ -823,19 +828,17 @@ def makenewdir(newpath):
 	if not os.path.exists(newpath):
 		os.makedirs(newpath)
 		show_file_and_metadata('Created folder', newpath)
-		clear_cache()
+		clear_cache(pathlib.Path(newpath).parent.stem)
 
 
 def openfile(filename):
 
 	if pathlib.Path(filename).suffix.strip(".").upper() == 'URL':
-		day = datetime.today().strftime('%A')
-		if day == day:
-			print('Make sure you are working on projects today...')
-			sleep(30)
-		
-	os.startfile(filename)
-	do_log('OPEN ' + filename)
+
+		if affirmative_answer('Is this important enough to put off sorting files? '):
+			explain_sleep(150)
+			os.startfile(filename)
+			do_log('OPEN ' + filename)
 	
 
 def movefile(current, dest):
@@ -889,8 +892,7 @@ while True:
 
 		if response["action"] == 'exit':
 			clear_cache()
-			print('Exiting now')
-			sleep(2)
+			explain_sleep(2)
 			break
 		else:
 			dircheck = response["folder"]
