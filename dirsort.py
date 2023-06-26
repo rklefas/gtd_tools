@@ -14,7 +14,7 @@ import time
 import random
 
 
-def globber(ex, method = 'name'):
+def globber(ex, method = 'name asc'):
 
 	first = datetime.now().strftime("%H:%M:%S")
 
@@ -232,25 +232,9 @@ def dedupemap(mapping):
 
 
 def getfolders(dircheck):
+	back = foldersummary(dircheck)
+	return back.get('dirs')
 
-	try:
-		gotback = dirfetch('getfolders', dircheck)
-		return gotback
-	except:
-		golist = {"0": ".."}
-
-		folders = 0
-		items = globber(dircheck+"/*")
-
-		for file in items:
-			if os.path.isdir(file):
-				folders = folders + 1
-				golist[str(folders)] = pathlib.Path(file).stem
-
-		if len(items) > 100:
-			return dirput('getfolders', dircheck, golist)
-		else:
-			return golist
 
 
 def pickfolder(starting, maxshow):
@@ -381,6 +365,8 @@ def foldersummary(dircheck):
 		size = 0
 		extensions = {}
 
+		dirs = {"0": ".."}
+
 		for file in globber(dircheck+"/*"):
 		
 			if os.path.isfile(file):
@@ -395,10 +381,12 @@ def foldersummary(dircheck):
 			
 				files = files + 1
 				size = size + os.path.getsize(file)
-			else:
+				
+			elif os.path.isdir(file):
 				folders = folders + 1
+				dirs[str(folders)] = pathlib.Path(file).stem
 
-		golist = {"path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
+		golist = {"dirs": dirs, "path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
 		
 		if files > 100:
 			return dirput('foldersummary', dircheck, golist)
@@ -730,7 +718,9 @@ def sortfile(response, file):
 #	if detected == 'done':
 #		return {"action": "done", "folder": response["folder"], "file": file}
 	
+	linedivider()
 	show_file_and_metadata("Sort Options For", file)
+	linedivider()
 		
 	newpath = response["folder"]
 	newfilelocation = file
