@@ -60,6 +60,12 @@ def globber(ex, method = 'name asc'):
 	return xx
 
 
+def print_block(xx, block = 25):
+	down = int(len(xx) / block)
+
+	return xx.ljust((down+1)*block, " ")
+
+
 def show_file_and_metadata(heading, item):
 
 	format = '%a %Y %b %d'
@@ -85,9 +91,10 @@ def clear_cache(filter = ""):
 	pattern = "./cache/*" + filter + ".json"
 	files = globber(pattern)
 
-	if affirmative_answer('Clear the cache?  Files: ' + str(len(files)) + ' -- Pattern to use: ' + pattern):
-		for file in files:
-			os.remove(file)
+	if len(files) > 0:
+		if affirmative_answer('Clear ' + str(len(files)) + ' files from cache?  Pattern used: ' + pattern):
+			for file in files:
+				os.remove(file)
 
 
 def slug_path(dir):
@@ -526,30 +533,23 @@ def sortfolder(response):
 
 
 
-def easyoptions(map, question, p_columns = 3):
+def easyoptions(map, question, p_linemax = 80):
 
-	columns = 0
 	outstring = ""
 
 	for key in map:
-		outstring = outstring + str('  ' + key + ' = ' + map[key]).ljust(30, " ")
-		columns = columns + 1
+		outstring = outstring + print_block('  ' + key + ' = ' + map[key])
 		
-		if columns == p_columns:
+		if len(outstring) >= p_linemax:
 			print(outstring)
 			sleep(0.01)
 			outstring = ""
-			columns = 0
 	
 	print(outstring)
 
 	lineitem('other', 'enter a custom value not listed')
 	print("")
 	inputx = input(question)
-
-	if inputx == 'x-columns':
-		input_col = int(input('Number of columns? '))
-		return easyoptions(map, question, input_col)
 
 	if inputx == '':
 		return inputx
@@ -579,13 +579,13 @@ def easyoptions(map, question, p_columns = 3):
 
 	input('Not a valid option: ' + inputx)
 
-	return easyoptions(map, question, p_columns)
+	return easyoptions(map, question, p_linemax)
 
 
 
 def giveoptionset(sets):
 
-	refmap = {"up":"..", "o":"open", "exit":"exit"}
+	refmap = {"up":"..", "op":"open", "exit":"exit"}
 	refmap["del"] = "delete"
 	refmap["od"] = "open then delete"
 	refmap["pl"] = "play"
@@ -601,6 +601,12 @@ def giveoptionset(sets):
 		refmap["tw"] = "to watch"
 		refmap["tr"] = "to read"
 		
+	elif sets == 'to watch':
+
+		refmap["d"] = "watch then delete"
+		refmap["n"] = "take notes"
+		refmap["ps"] = "purchase, product, or service"
+
 	elif sets == 'is actionable' or sets == 'is someday':
 
 		refmap["h"] = "at home"
@@ -822,13 +828,14 @@ def makenewdir(newpath):
 
 
 def openfile(filename):
-
 	if pathlib.Path(filename).suffix.strip(".").upper() == 'URL':
-
 		if affirmative_answer('Is this important enough to put off sorting files? '):
+			explain_sleep(5)
+		else:
 			explain_sleep(150)
-			os.startfile(filename)
-			do_log('OPEN ' + filename)
+			
+	os.startfile(filename)
+	do_log('OPEN ' + filename)
 	
 
 def movefile(current, dest):
