@@ -298,15 +298,13 @@ def pickfolder(starting, maxshow):
 
 		
 		if topSummary["files"] > 0:
-			linedivider()
-			lineitem("  Files", "List " + str(topSummary["files"]) + " files!")
-			
+			linedivider()			
 			comboline = ""
 
 			for xx in topSummary["extensions"]:
 				comboline = comboline + xx + ":" + str(topSummary["extensions"].get(xx)) + " "	
 
-			lineitem("", comboline)
+			lineitem(str(topSummary["files"]) + " files", comboline)
 
 		if picked == None:
 		
