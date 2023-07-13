@@ -320,6 +320,8 @@ def pickfolder(starting, maxshow):
 				return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'clear' or tmp == 'common' or tmp == 'melt':
 				return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
+			elif tmp == 'quick-sort':
+				return {"action" : "quick-sort", "filter": '', "folder" : os.path.abspath(dircheck)}
 			elif tmp == 'sort':
 				filter = input("Filter by filename? ")
 				return {"action" : "sort", "filter": filter, "folder" : os.path.abspath(dircheck)}
@@ -464,7 +466,7 @@ def sortfolder(response):
 	
 			
 			
-	if response["action"] == 'sort' or response["action"] == 'sort-dirs':
+	if response["action"] == 'sort' or response["action"] == 'sort-dirs' or response["action"] == 'quick-sort':
 		globpattern = dircheck + "/*" + response["filter"] + '*'
 	
 		for file in globber(globpattern):
@@ -472,7 +474,7 @@ def sortfolder(response):
 			if os.path.isfile(file) and response["action"] == 'sort-dirs':
 				continue
 
-			if os.path.isdir(file) and response["action"] == 'sort':
+			if os.path.isdir(file) and (response["action"] == 'sort' or response["action"] == 'quick-sort'):
 				continue
 
 			lineitem("Filter Applied", globpattern)
@@ -718,6 +720,7 @@ def sortfile(response, file):
 	
 	rootmap = giveoptionset('root')
 	detected = detectoptionset(rootmap, file)
+	newpath = response["folder"]
 	
 #	if detected == 'done':
 #		return {"action": "done", "folder": response["folder"], "file": file}
@@ -725,8 +728,22 @@ def sortfile(response, file):
 	linedivider()
 	show_file_and_metadata("Sort Options For", file)
 	linedivider()
+	
+	if response['action'] == 'quick-sort':
+	
+		if affirmative_answer('Is this file IMMEDIATELY actionable? '):
+			gopath = 'actionable right now'
+		else:
+			gopath = 'non actionable'
 		
-	newpath = response["folder"]
+		newpath = str(pathlib.Path(file).parent) + '/' + gopath
+		makenewdir(newpath)
+		newfilelocation = movefile(file, newpath)
+		
+		return {"action": "moved", "folder": newpath, "file": newfilelocation}
+
+
+		
 	newfilelocation = file
 
 	refmap = giveoptionset(detected)
