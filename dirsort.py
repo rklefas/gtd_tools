@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 import glob
 import os
 import pathlib
@@ -35,13 +36,13 @@ def globber(ex, method = 'name asc'):
         option = method
         
     if option == 'random':
-        random.shuffle(xx)
+        xx = sorted(xx, key=pushdate_random)
     elif option == 'size asc':
         xx = sorted(xx, key=os.path.getsize)
     elif option == 'date asc':
         xx = sorted(xx, key=os.path.getmtime)
     elif option == 'name asc':
-        xx = sorted(xx)
+        xx = sorted(xx, key=pushdate)
     elif option == 'size desc':
         xx = sorted(xx, key=os.path.getsize)
         xx.reverse()
@@ -49,7 +50,7 @@ def globber(ex, method = 'name asc'):
         xx = sorted(xx, key=os.path.getmtime)
         xx.reverse()
     elif option == 'name desc':
-        xx = sorted(xx)
+        xx = sorted(xx, key=pushdate)
         xx.reverse()
         
     second = datetime.now().strftime("%H:%M:%S")
@@ -58,6 +59,25 @@ def globber(ex, method = 'name asc'):
 #       print(first, second, ex)
 
     return xx
+
+
+def pushdate(filename):
+    filename = str(pathlib.Path(filename).stem)
+    
+    if filename[0:3] == '{20':
+        return filename
+    
+    return datetime.now().strftime("{%Y-%m-%d} ") + filename
+
+
+def pushdate_random(filename):
+    filename = str(pathlib.Path(filename).stem)
+    
+    if filename[0:3] == '{20':
+        return filename
+    
+    return datetime.now().strftime("{%Y-%m-%d} ") + str(random.randrange(1000,9999))
+
 
 
 def print_block(xx, block = 25):
@@ -224,8 +244,43 @@ def append_rename(fname, appending):
     dest = str(dest.parent) + '/' + str(dest.stem) + '-' + appending + str(dest.suffix)
     os.rename(fname, dest)
     
+    do_log(' REN ' + fname)
+    do_log('  TO ' + dest)
+    
     return dest
     
+
+def push_rename(fname, prepending):
+
+    pushing = prepending.replace('push to ', '')
+    
+    if pushing == '[tomorrow]':
+        pushing = timedelta(days=1)
+    elif pushing == '[this week]':
+        pushing = timedelta(days=7)
+    elif pushing == '[this month]':
+        pushing = timedelta(days=28)
+    elif pushing == '[this quarter]':
+        pushing = timedelta(days=90)
+    elif pushing == '[this year]':
+        pushing = timedelta(days=365)
+    elif pushing == '[this decade]':
+        pushing = timedelta(days=3650)
+    elif pushing == '[never]':
+        pushing = timedelta(days=10000)
+
+    pushing = datetime.now() + pushing
+    
+    dest = pathlib.Path(fname)
+    dest = str(dest.parent) + '/{' + pushing.strftime("%Y-%m-%d") + '} ' + str(dest.stem) + str(dest.suffix)
+    os.rename(fname, dest)
+    
+    do_log(' REN ' + fname)
+    do_log('  TO ' + dest)
+    
+    return dest
+
+
 
 def dedupemap(mapping):
 
@@ -610,6 +665,13 @@ def giveoptionset(sets):
         refmap["d"] = "watch then delete"
         refmap["n"] = "take notes"
         refmap["ps"] = "purchase, product, or service"
+        refmap["pt"] = "push to [tomorrow]"
+        refmap["pw"] = "push to [this week]"
+        refmap["pm"] = "push to [this month]"
+        refmap["pq"] = "push to [this quarter]"
+        refmap["py"] = "push to [this year]"
+        refmap["pd"] = "push to [this decade]"
+        refmap["px"] = "push to [never]"
 
     elif sets == 'is actionable' or sets == 'is someday':
 
@@ -780,13 +842,17 @@ def sortfile(response, file):
                 do_log(' DEL ' + newfilelocation)
             
             return {"action" : "delete"}
+        elif subfolder[0:4] == 'push':
+
+            pushname = push_rename(newfilelocation, subfolder)
+
+            return {"action" : "moved", "file": pushname}
         elif subfolder == 'exit':
             return {"action" : "exit"}
 
         newpath = newpath + '/' + subfolder
         
         makenewdir(newpath)
-            
         newfilelocation = movefile(newfilelocation, newpath)
         
         return sortfile({"action": "moved", "folder": newpath}, newfilelocation)
