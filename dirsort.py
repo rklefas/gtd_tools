@@ -163,7 +163,11 @@ def preview_file(fname):
 			text_file.write(data)
 			text_file.close()
 
-			openfile(archiveName)
+			if affirmative_answer('We created an archive URL file.  Do you want to keep it? '):
+				openfile(archiveName)
+				os.remove(archiveName)
+			else:
+				openfile(archiveName)			
 			
 		openfile(fname)
 
