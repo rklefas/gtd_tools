@@ -62,7 +62,7 @@ def globber(ex, method = 'name asc'):
 
 
 def pushdate(filename):
-    filename = str(pathlib.Path(filename).stem)
+    filename = str(pathlib.Path(filename).stem).lower()
     
     if filename[0:3] == '{20':
         return filename
@@ -71,7 +71,7 @@ def pushdate(filename):
 
 
 def pushdate_random(filename):
-    filename = str(pathlib.Path(filename).stem)
+    filename = str(pathlib.Path(filename).stem).lower()
     
     if filename[0:3] == '{20':
         return filename
@@ -364,6 +364,9 @@ def pickfolder(starting, maxshow):
                 comboline = comboline + xx + ":" + str(topSummary["extensions"].get(xx)) + " "  
 
             lineitem(str(topSummary["files"]) + " files", comboline)
+            
+            if topSummary["delayed"] > 0:
+                lineitem("Delayed files", str(topSummary["delayed"]))
 
         if picked == None:
         
@@ -430,6 +433,7 @@ def foldersummary(dircheck):
         folders = 0
         size = 0
         extensions = {}
+        delayed = 0
 
         dirs = {"0": ".."}
 
@@ -438,6 +442,7 @@ def foldersummary(dircheck):
             if os.path.isfile(file):
             
                 exten = pathlib.Path(file).suffix.strip(".").lower()
+                filename = pathlib.Path(file).stem
                 value = extensions.get(exten)
         
                 if value == None:
@@ -448,11 +453,21 @@ def foldersummary(dircheck):
                 files = files + 1
                 size = size + os.path.getsize(file)
                 
+                if filename[0:3] == '{20':
+                    delayed = delayed + 1
+                
             elif os.path.isdir(file):
                 folders = folders + 1
                 dirs[str(folders)] = pathlib.Path(file).stem
 
-        golist = {"dirs": dirs, "path": dircheck, "files": files, "folders": folders, "size": size, "extensions": extensions}
+        golist = {}
+        golist["dirs"] = dirs
+        golist["path"] = dircheck
+        golist["files"] = files
+        golist["folders"] = folders
+        golist["size"] = size
+        golist["extensions"] = extensions
+        golist["delayed"] = delayed
         
         if files > 100:
             return dirput('foldersummary', dircheck, golist)
@@ -528,7 +543,7 @@ def sortfolder(response):
     if response["action"] == 'sort' or response["action"] == 'sort-dirs' or response["action"] == 'quick-sort':
         globpattern = dircheck + "/*" + response["filter"] + '*'
     
-        for file in globber(globpattern):
+        for file in globber(globpattern, 'ask'):
         
             if os.path.isfile(file) and response["action"] == 'sort-dirs':
                 continue
@@ -725,28 +740,31 @@ def giveoptionset(sets):
 
 
 
-def detectoptionset(timeframes, file):
+def detectoptionset(rootoptions, file):
 
-    for key in timeframes:
-        if 'is trash' == pathlib.Path(file).parent.stem:
-            return 'done'
-        elif 'is completed' == pathlib.Path(file).parent.stem:
-            return 'done'
-        elif 'is not sure' == pathlib.Path(file).parent.stem:
-            return 'done'
-        elif 'is reference' == pathlib.Path(file).parent.stem:
-            return 'is reference'
-        elif 'is reference' == pathlib.Path(file).parent.parent.stem:
-            return 'basic'
-        elif 'is reference' == pathlib.Path(file).parent.parent.parent.stem:
-            return 'basic'
-        elif timeframes[key] == pathlib.Path(file).parent.stem:
-            return timeframes[key]
-        elif 'is actionable' == pathlib.Path(file).parent.parent.stem:
-            return pathlib.Path(file).parent.stem
-        elif timeframes[key] == pathlib.Path(file).parent.parent.parent.stem:
+    if 'is trash' == pathlib.Path(file).parent.stem:
+        return 'done'
+    elif 'is completed' == pathlib.Path(file).parent.stem:
+        return 'done'
+    elif 'is not sure' == pathlib.Path(file).parent.stem:
+        return 'done'
+    elif 'is reference' == pathlib.Path(file).parent.stem:
+        return 'is reference'
+    elif 'is reference' == pathlib.Path(file).parent.parent.stem:
+        return 'basic'
+    elif 'to watch' == pathlib.Path(file).parent.parent.stem:
+        return 'to watch'
+    elif 'is reference' == pathlib.Path(file).parent.parent.parent.stem:
+        return 'basic'
+    elif 'is actionable' == pathlib.Path(file).parent.parent.stem:
+        return pathlib.Path(file).parent.stem
+
+    for key in rootoptions:
+        if rootoptions[key] == pathlib.Path(file).parent.stem:
+            return rootoptions[key]
+        elif rootoptions[key] == pathlib.Path(file).parent.parent.parent.stem:
             return "priority"
-        elif timeframes[key] == pathlib.Path(file).parent.parent.parent.parent.stem:
+        elif rootoptions[key] == pathlib.Path(file).parent.parent.parent.parent.stem:
             return "done"
         
     return "root"
