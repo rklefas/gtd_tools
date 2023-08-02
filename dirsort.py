@@ -38,19 +38,19 @@ def globber(ex, method = 'name asc'):
     if option == 'random':
         xx = sorted(xx, key=pushdate_random)
     elif option == 'size asc':
-        xx = sorted(xx, key=os.path.getsize)
+        xx = sorted(xx, key=pushdate_size)
     elif option == 'date asc':
         xx = sorted(xx, key=os.path.getmtime)
     elif option == 'name asc':
-        xx = sorted(xx, key=pushdate)
+        xx = sorted(xx, key=pushdate_name)
     elif option == 'size desc':
-        xx = sorted(xx, key=os.path.getsize)
+        xx = sorted(xx, key=pushdate_size)
         xx.reverse()
     elif option == 'date desc':
         xx = sorted(xx, key=os.path.getmtime)
         xx.reverse()
     elif option == 'name desc':
-        xx = sorted(xx, key=pushdate)
+        xx = sorted(xx, key=pushdate_name)
         xx.reverse()
         
     second = datetime.now().strftime("%H:%M:%S")
@@ -61,22 +61,30 @@ def globber(ex, method = 'name asc'):
     return xx
 
 
-def pushdate(filename):
-    filename = str(pathlib.Path(filename).stem).lower()
-    
-    if filename[0:3] == '{20':
-        return filename
-    
-    return datetime.now().strftime("{%Y-%m-%d} ") + filename
+def pushdate_name(filename):
+    sortvalue = str(pathlib.Path(filename).stem).lower()
+    delayed = parse_delaytime(filename)
+    return delayed + ' ' + str(sortvalue)
 
 
 def pushdate_random(filename):
-    filename = str(pathlib.Path(filename).stem).lower()
-    
-    if filename[0:3] == '{20':
-        return filename
-    
-    return datetime.now().strftime("{%Y-%m-%d} ") + str(random.randrange(1000,9999))
+    sortvalue = random.randrange(1000, 9999)
+    delayed = parse_delaytime(filename)
+    return delayed + ' ' + str(sortvalue)
+
+
+def pushdate_size(filename):
+    sortvalue = os.path.getsize(filename)
+    delayed = parse_delaytime(filename)
+    return delayed + ' ' + str(sortvalue).rjust(20, '0')
+
+
+def parse_delaytime(filename):
+    stem = str(pathlib.Path(filename).stem)
+    if stem[0:3] == '{20':
+        return stem[0:12]
+    else:
+        return datetime.now().strftime("{%Y-%m-%d}")
 
 
 
