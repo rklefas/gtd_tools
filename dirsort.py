@@ -321,7 +321,10 @@ def pickfolder(starting, maxshow):
 
         picked = None
         folders = 0
+        clearing()
+        linedivider()
         show_file_and_metadata("Currently in", dircheck)
+        linedivider()
 
         topSummary = foldersummary(dircheck)
         gotten = getfolders(dircheck).values()
@@ -488,6 +491,7 @@ def foldersummary(dircheck):
 def sortfolder(response):
 
     # debug_print("in sortfolder")
+    clearing()
     
     dircheck = response["folder"]
     
@@ -612,6 +616,11 @@ def sortfolder(response):
             print(e)
 
 
+def clearing():
+    print('')
+    print('Switching to new screen...')
+    sleep(0.5)
+    os.system('cls')
 
 
 
