@@ -157,7 +157,7 @@ def dirput(type, dir, data):
 def do_log(message):
     dateX = datetime.now().strftime("%Y-%m-%d")
     timeX = datetime.now().strftime(" %H:%M:%S")
-    file1 = open('logs/' + dateX + "-moved.log", "a")
+    file1 = open('logs/' + dateX + "-actions.log", "a")
     file1.write(dateX + timeX + " " + message + "\n")
     file1.close()
 
@@ -826,6 +826,7 @@ def sortfile(response, file):
 #   if detected == 'done':
 #       return {"action": "done", "folder": response["folder"], "file": file}
     
+    clearing()
     linedivider()
     show_file_and_metadata("Sort Options For", file)
     linedivider()
