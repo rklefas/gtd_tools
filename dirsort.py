@@ -391,7 +391,7 @@ def pickfolder(starting, maxshow):
             elif tmp == 'list':
                 filter = ''
                 return {"action" : "list", "filter": filter, "folder" : os.path.abspath(dircheck)}
-            elif tmp == 'clear' or tmp == 'common' or tmp == 'melt':
+            elif tmp == 'clear' or tmp == 'common' or tmp == 'melt' or tmp == 'explorer':
                 return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
             elif tmp == 'quick-sort':
                 return {"action" : "quick-sort", "filter": '', "folder" : os.path.abspath(dircheck)}
@@ -592,6 +592,9 @@ def sortfolder(response):
                     if confirmation('Common words shown ' + str(shown) + ' ') == 'exit':
                         break
 
+    if response["action"] == 'explorer':
+        print('Opening this folder in explorer...')
+        os.startfile(dircheck)
 
     if response["action"] == 'clear':
         clear_cache()
@@ -707,7 +710,7 @@ def giveoptionset(sets):
 
     elif sets == 'is actionable' or sets == 'is someday':
 
-        refmap["h"] = "at home"
+        refmap["h"] = "at home office"
         refmap["c"] = "at computer"
         refmap["o"] = "at outside"
     
@@ -729,9 +732,9 @@ def giveoptionset(sets):
         refmap["ex"] = "expert consultation"
         refmap["r"] = "restaurants"
         
-    elif sets == 'at home':
+    elif sets == 'at home office':
         
-        refmap["re"] = "recipe"
+        refmap["pr"] = "print recipe"
         refmap["wr"] = "write to list"
 
     elif sets == 'priority':
