@@ -102,7 +102,7 @@ def show_file_and_metadata(heading, item):
         modification_time = time.localtime(os.path.getmtime(item))
         local_time = time.strftime(format, modification_time)
         
-        lineitem(heading, local_time + '  ' + human_readable_size(os.path.getsize(item), 1).rjust(10, " ") + '   ' + pathlib.Path(item).name)
+        lineitem(heading, local_time + '  ' + human_readable_size(os.path.getsize(item), 0).rjust(8, " ") + '   ' + pathlib.Path(item).name)
     elif os.path.isdir(item):
         modification_time = time.localtime(os.path.getmtime(item))
         local_time = time.strftime(format, modification_time)
@@ -905,12 +905,10 @@ def explain_sleep(tx):
 
 
 def lineitem(key, value):
-
-#   if len(key) > 0:
-    key = key + " | "
+    columns, rows = shutil.get_terminal_size()
+    linex = key.rjust(17, " ") + " | " + value
         
-#   print(datetime.now().strftime("  %M:%S ") + key.rjust(15, " ") + value[:80])
-    print(key.rjust(20, " ") + value[:100])
+    print(linex[:columns])
     sleep(0.01)
 
 
@@ -995,12 +993,16 @@ def movefile(current, dest):
 
     
 
-dircheck = input("Which drive letter to start with? ").strip()
+try:
+    dircheck = dirfetch('start', '.')
+except:
+    dircheck = input("Which drive letter to start with? ").strip()
 
-if dircheck == '' or dircheck == '.':
-    dircheck = '.'
-else:
-    dircheck = dircheck + ':'
+    if dircheck == '' or dircheck == '.':
+        dircheck = '.'
+    else:
+        dircheck = dircheck + ':'
+
 
 while True:
 
@@ -1010,9 +1012,10 @@ while True:
     
     try:
         response = pickfolder(dircheck, rows - 4)
-
+        
         if response["action"] == 'exit':
             clear_cache()
+            dirput('start', '.', dircheck)
             explain_sleep(2)
             break
         else:
