@@ -107,7 +107,7 @@ def show_file_and_metadata(heading, item):
         modification_time = time.localtime(os.path.getmtime(item))
         local_time = time.strftime(format, modification_time)
 
-        lineitem(heading, local_time + '   <DIR>       ' + os.path.abspath(item))
+        lineitem(heading, local_time + '   <DIR>     ' + os.path.abspath(item))
     else:
         lineitem('<MISSING>', item)
 
@@ -262,6 +262,10 @@ def push_rename(fname, prepending):
 
     pushing = prepending.replace('push to ', '')
     
+    if pushing == '[date]':
+        pushing = easyoptions(giveoptionset('(1 tomorrow)'), 'Push to? ')
+        pushing = pushing.replace('push to ', '')
+
     finalpath = str(pathlib.Path(fname).parent)
     finalpath = finalpath.replace('\\', '/')
     finalpath = finalpath.replace('/(1 tomorrow)',      '/[delay]')
@@ -272,6 +276,7 @@ def push_rename(fname, prepending):
     finalpath = finalpath.replace('/(6 this decade)',   '/[delay]')
     finalpath = finalpath.replace('/(9 never)',         '/[delay]')
     finalpath = finalpath.replace('/to watch',          '/to watch/[delay]')
+    finalpath = finalpath.replace('/is actionable',     '/is actionable/[delay]')
     finalpath = finalpath.replace('/[delay]/[delay]',   '/[delay]')
     finalpath = finalpath.replace('/[delay]',           '/' + pushing)
    
@@ -675,6 +680,7 @@ def giveoptionset(sets):
     refmap["del"] = "delete"
     refmap["od"] = "open then delete"
     refmap["pl"] = "play"
+    refmap["pdate"] = "push to [date]"
     
     if sets == 'root':
     
@@ -764,29 +770,35 @@ def giveoptionset(sets):
 
 def detectoptionset(rootoptions, file):
 
-    if 'is trash' == pathlib.Path(file).parent.stem:
+    currentfolder = pathlib.Path(file).parent
+    
+    if 'is trash' == currentfolder.stem:
         return 'done'
-    elif 'is completed' == pathlib.Path(file).parent.stem:
+    elif 'is completed' == currentfolder.stem:
         return 'done'
-    elif 'is not sure' == pathlib.Path(file).parent.stem:
+    elif 'is not sure' == currentfolder.stem:
         return 'done'
-    elif 'is reference' == pathlib.Path(file).parent.stem:
+    elif 'is reference' == currentfolder.stem:
         return 'is reference'
-    elif 'is reference' == pathlib.Path(file).parent.parent.stem:
+    elif 'is reference' == currentfolder.parent.stem:
         return 'basic'
-    elif 'to watch' == pathlib.Path(file).parent.parent.stem:
+    elif 'is reference' == currentfolder.parent.parent.stem:
+        return 'basic'
+    elif 'to watch' == currentfolder.parent.stem:
         return 'to watch'
-    elif 'is reference' == pathlib.Path(file).parent.parent.parent.stem:
-        return 'basic'
-    elif 'is actionable' == pathlib.Path(file).parent.parent.stem:
-        return pathlib.Path(file).parent.stem
+    elif 'is actionable' == currentfolder.parent.stem:
+        return 'is actionable'
 
     for key in rootoptions:
-        if rootoptions[key] == pathlib.Path(file).parent.stem:
-            return rootoptions[key]
-        elif rootoptions[key] == pathlib.Path(file).parent.parent.parent.stem:
+        rootfolder = rootoptions[key]
+    
+        if rootfolder == currentfolder.stem:
+            return rootfolder
+        elif rootfolder == currentfolder.parent.stem:
+            return rootfolder
+        elif rootfolder == currentfolder.parent.parent.stem:
             return "priority"
-        elif rootoptions[key] == pathlib.Path(file).parent.parent.parent.parent.stem:
+        elif rootfolder == currentfolder.parent.parent.parent.stem:
             return "done"
         
     return "root"
@@ -833,6 +845,7 @@ def sortfile(response, file):
     
     clearing()
     linedivider()
+    show_file_and_metadata("Folder", pathlib.Path(file).parent)
     show_file_and_metadata("Sort Options For", file)
     linedivider()
     
