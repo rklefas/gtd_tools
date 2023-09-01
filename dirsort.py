@@ -262,31 +262,23 @@ def push_rename(fname, prepending):
 
     pushing = prepending.replace('push to ', '')
     
-    if pushing == '[tomorrow]':
-        pushing = timedelta(days=1)
-    elif pushing == '[this week]':
-        pushing = timedelta(days=7)
-    elif pushing == '[this month]':
-        pushing = timedelta(days=28)
-    elif pushing == '[this quarter]':
-        pushing = timedelta(days=90)
-    elif pushing == '[this year]':
-        pushing = timedelta(days=365)
-    elif pushing == '[this decade]':
-        pushing = timedelta(days=3650)
-    elif pushing == '[never]':
-        pushing = timedelta(days=10000)
-
-    pushing = datetime.now() + pushing
+    finalpath = str(pathlib.Path(fname).parent)
+    finalpath = finalpath.replace('\\', '/')
+    finalpath = finalpath.replace('/(1 tomorrow)',      '/[delay]')
+    finalpath = finalpath.replace('/(2 this week)',     '/[delay]')
+    finalpath = finalpath.replace('/(3 this month)',    '/[delay]')
+    finalpath = finalpath.replace('/(4 this quarter)',  '/[delay]')
+    finalpath = finalpath.replace('/(5 this year)',     '/[delay]')
+    finalpath = finalpath.replace('/(6 this decade)',   '/[delay]')
+    finalpath = finalpath.replace('/(9 never)',         '/[delay]')
+    finalpath = finalpath.replace('/to watch',          '/to watch/[delay]')
+    finalpath = finalpath.replace('/[delay]/[delay]',   '/[delay]')
+    finalpath = finalpath.replace('/[delay]',           '/' + pushing)
+   
+    makenewdir(finalpath)
+    result = movefile(fname, finalpath)
     
-    dest = pathlib.Path(fname)
-    dest = str(dest.parent) + '/{' + pushing.strftime("%Y-%m-%d") + '} ' + str(dest.stem) + str(dest.suffix)
-    os.rename(fname, dest)
-    
-    do_log(' REN ' + fname)
-    do_log('  TO ' + dest)
-    
-    return dest
+    return result
 
 
 
@@ -695,18 +687,28 @@ def giveoptionset(sets):
         refmap["tw"] = "to watch"
         refmap["tr"] = "to read"
         
+    elif sets == '(1 tomorrow)' or sets == '(2 this week)' or sets == '(3 this month)' or sets == '(4 this quarter)' or sets == '(5 this year)' or sets == '(6 this decade)':
+
+        refmap["pt"] = "push to (1 tomorrow)"
+        refmap["pw"] = "push to (2 this week)"
+        refmap["pm"] = "push to (3 this month)"
+        refmap["pq"] = "push to (4 this quarter)"
+        refmap["py"] = "push to (5 this year)"
+        refmap["pd"] = "push to (6 this decade)"
+        refmap["px"] = "push to (9 never)"
+
     elif sets == 'to watch':
 
         refmap["d"] = "watch then delete"
         refmap["n"] = "take notes"
         refmap["ps"] = "purchase, product, or service"
-        refmap["pt"] = "push to [tomorrow]"
-        refmap["pw"] = "push to [this week]"
-        refmap["pm"] = "push to [this month]"
-        refmap["pq"] = "push to [this quarter]"
-        refmap["py"] = "push to [this year]"
-        refmap["pd"] = "push to [this decade]"
-        refmap["px"] = "push to [never]"
+        refmap["pt"] = "push to (1 tomorrow)"
+        refmap["pw"] = "push to (2 this week)"
+        refmap["pm"] = "push to (3 this month)"
+        refmap["pq"] = "push to (4 this quarter)"
+        refmap["py"] = "push to (5 this year)"
+        refmap["pd"] = "push to (6 this decade)"
+        refmap["px"] = "push to (9 never)"
 
     elif sets == 'is actionable' or sets == 'is someday':
 
