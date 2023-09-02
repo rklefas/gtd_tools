@@ -607,13 +607,6 @@ def sortfolder(response):
         
             movefile(file, pathlib.Path(file).parent.parent)
 
-        confirmation("Folder will be deleted: " + dircheck)
-
-        try:
-            os.rmdir(dircheck)
-            clear_cache(pathlib.Path(file).parent.parent.stem)
-        except Exception as e: 
-            print(e)
 
 
 def clearing():
@@ -983,6 +976,7 @@ def movefile(current, dest):
         return ''
 
     dest = str(dest) + "/" + pathlib.Path(current).name
+    dircheck = str(pathlib.Path(current).parent)
     
     try:
         if os.path.isdir(dest):
@@ -993,13 +987,23 @@ def movefile(current, dest):
 
         linedivider()
         show_file_and_metadata('File to Move', current)
-        show_file_and_metadata('Current', pathlib.Path(current).parent)
+        show_file_and_metadata('Current', dircheck)
         os.rename(current, dest)
         show_file_and_metadata('Destination', pathlib.Path(dest).parent)
         linedivider()
         
         do_log('MOVE ' + current)
         do_log('  TO ' + dest)
+        
+        
+        items = globber(dircheck + '/*')
+        
+        if len(items) == 0:
+            confirmation("Folder is empty and will be deleted: " + dircheck)
+            os.rmdir(dircheck)
+            clear_cache(pathlib.Path(dest).parent.stem)
+
+
         
         return dest
         
