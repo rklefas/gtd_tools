@@ -694,7 +694,8 @@ def giveoptionset(sets):
         refmap["pq"] = "push to (4 this quarter)"
         refmap["py"] = "push to (5 this year)"
         refmap["pd"] = "push to (6 this decade)"
-        refmap["px"] = "push to (9 never)"
+        refmap["px"] = "push to (8 completed)"
+        refmap["pz"] = "push to (9 never)"
 
     elif sets == 'to watch':
 
@@ -707,7 +708,8 @@ def giveoptionset(sets):
         refmap["pq"] = "push to (4 this quarter)"
         refmap["py"] = "push to (5 this year)"
         refmap["pd"] = "push to (6 this decade)"
-        refmap["px"] = "push to (9 never)"
+        refmap["px"] = "push to (8 completed)"
+        refmap["pz"] = "push to (9 never)"
 
     elif sets == 'is actionable' or sets == 'is someday':
 
@@ -976,6 +978,10 @@ def movefile(current, dest):
         return ''
 
     dest = str(dest) + "/" + pathlib.Path(current).name
+    
+    if pathlib.Path(current) == pathlib.Path(dest):
+        return ''
+    
     dircheck = str(pathlib.Path(current).parent)
     
     try:
