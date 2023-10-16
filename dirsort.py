@@ -968,7 +968,21 @@ def openfile(filename):
             
     os.startfile(filename)
     do_log('OPEN ' + filename)
+   
+   
+def treecleanup(dircheck):
+
+    items = globber(dircheck + '/*')
     
+    if len(items) == 0:
+        confirmation("Folder is empty and will be deleted: " + dircheck)
+        os.rmdir(dircheck)
+        treecleanup(str(pathlib.Path(dircheck).parent))
+        
+        return True
+    else:
+        return False
+  
 
 def movefile(current, dest):
 
@@ -1002,11 +1016,7 @@ def movefile(current, dest):
         do_log('  TO ' + dest)
         
         
-        items = globber(dircheck + '/*')
-        
-        if len(items) == 0:
-            confirmation("Folder is empty and will be deleted: " + dircheck)
-            os.rmdir(dircheck)
+        if treecleanup(dircheck):
             clear_cache(pathlib.Path(dest).parent.stem)
 
 
