@@ -60,18 +60,21 @@ def globber(ex, method = 'name asc'):
 
     return xx
 
+# ---------------
 
 def pushdate_name(filename):
     sortvalue = str(pathlib.Path(filename).stem).lower()
     delayed = parse_delaytime(filename)
     return delayed + ' ' + str(sortvalue)
 
+# ---------------
 
 def pushdate_random(filename):
     sortvalue = random.randrange(1000, 9999)
     delayed = parse_delaytime(filename)
     return delayed + ' ' + str(sortvalue)
 
+# ---------------
 
 def pushdate_size(filename):
     sortvalue = os.path.getsize(filename)
@@ -268,15 +271,18 @@ def push_rename(fname, prepending):
 
     finalpath = str(pathlib.Path(fname).parent)
     finalpath = finalpath.replace('\\', '/')
-    finalpath = finalpath.replace('/(1 tomorrow)',      '/[delay]')
-    finalpath = finalpath.replace('/(2 this week)',     '/[delay]')
-    finalpath = finalpath.replace('/(3 this month)',    '/[delay]')
-    finalpath = finalpath.replace('/(4 this quarter)',  '/[delay]')
-    finalpath = finalpath.replace('/(5 this year)',     '/[delay]')
-    finalpath = finalpath.replace('/(6 this decade)',   '/[delay]')
-    finalpath = finalpath.replace('/(9 never)',         '/[delay]')
+    finalpath = finalpath.replace('/(1 tomorrow)',      '')
+    finalpath = finalpath.replace('/(2 this week)',     '')
+    finalpath = finalpath.replace('/(3 this month)',    '')
+    finalpath = finalpath.replace('/(4 this quarter)',  '')
+    finalpath = finalpath.replace('/(5 this year)',     '')
+    finalpath = finalpath.replace('/(6 this decade)',   '')
+    finalpath = finalpath.replace('/(9 never)',         '')
     finalpath = finalpath.replace('/to watch',          '/to watch/[delay]')
-    finalpath = finalpath.replace('/is actionable',     '/is actionable/[delay]')
+    finalpath = finalpath.replace('/at computer',       '/at computer/[delay]')
+    finalpath = finalpath.replace('/at home office',    '/at home office/[delay]')
+    finalpath = finalpath.replace('/at outside',        '/at outside/[delay]')
+    finalpath = finalpath.replace('/other context',     '/other context/[delay]')
     finalpath = finalpath.replace('/[delay]/[delay]',   '/[delay]')
     finalpath = finalpath.replace('/[delay]',           '/' + pushing)
    
@@ -379,10 +385,25 @@ def pickfolder(starting, maxshow):
         if picked == None:
         
             linedivider()
-            tmp = folderquery("Select an option (sort sort-dirs melt common clear list) or pick a folder: ")
+            tmp = folderquery("Select an option (help to show all) or pick a folder: ")
             
             if tmp == 'exit':
                 return {"action" : "exit"}
+            elif tmp == 'help':
+            
+                lineitem("sort", 'sort the files within this folder')
+                lineitem("sort-dirs", 'sort the folders within this folder')
+                lineitem("melt", 'melt this folder')
+                lineitem("common", 'show most common keywords in filenames')
+                lineitem("clear", 'clear performance cache')
+                lineitem("list", 'list files in this folder')
+                lineitem("explorer", 'open this folder in explorer')
+                lineitem("quick-sort", '?')
+                lineitem("exit", 'exit this program')
+                
+                confirmation('Press any key to exit help...')
+                continue
+
             elif tmp == '..':
                 picked = 0
             elif tmp == 'list':
@@ -716,6 +737,7 @@ def giveoptionset(sets):
         refmap["h"] = "at home office"
         refmap["c"] = "at computer"
         refmap["o"] = "at outside"
+        refmap["other"] = "other context"
     
     elif sets == 'at computer':
 
@@ -1026,7 +1048,12 @@ def movefile(current, dest):
     except Exception as e: 
         print(e)
 
-    
+
+# ---------------
+# ---------------
+
+os.chdir(pathlib.Path(__file__).parent)
+
 
 try:
     dircheck = dirfetch('start', '.')
