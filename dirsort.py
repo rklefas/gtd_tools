@@ -4,7 +4,6 @@ import glob
 import os
 import pathlib
 from time import sleep
-from playsound import playsound
 import pygame
 import random
 import re
@@ -12,7 +11,93 @@ import json
 from collections import Counter
 import shutil
 import time
-import random
+
+from win32com.client import Dispatch
+from inputimeout import inputimeout, TimeoutOccurred
+
+
+# ---------------
+# ---------------
+
+def prettyinput(q, defaultValue = None):
+    print('')
+    tmp = '<< ' + q + ' >> '
+    
+    if defaultValue != None:
+        print(' *** Default value is', defaultValue)
+    
+    print('-' * len(tmp))
+    xx = input(tmp)
+    print('-' * len(tmp))
+    
+    if xx == '' and defaultValue != None:
+        return defaultValue
+    
+    return xx
+
+# ---------------
+# ---------------
+
+def print_divider():
+    print('----------------------------------')
+    
+# ---------------
+
+
+def inputcontrols(num = None):
+
+    if num == None:
+        num = prettyinput('What timeout for the inputs?  0 will turn off timeouts, empty will change nothing: ')
+    
+
+    if num == '0':
+        dynamic_timeout = None
+    elif num == '':
+        print('No change to timeout setting')
+    else:
+        dynamic_timeout = int(num)
+        
+    return dynamic_timeout
+
+
+def spokeninputtimeout(q, default, specific_timeout = None, tries = 1):
+    
+    for thistry in reversed(range(0, tries)):
+    
+        newtx = specific_timeout
+
+        if newtx != None and newtx > 30:
+            Dispatch("SAPI.SpVoice").Speak(q)
+        
+        try:
+            print('')
+            print_divider()
+            print('  Enter == to alter timeout')
+            print('  (' + str(newtx) + ' sec timeout, tries remain ' +str(thistry)+ ', default : ' + default + ')')
+
+            val = inputimeout(q, newtx)
+
+            print_divider()
+            
+            if val == '==':
+                newtx = inputcontrols()
+            
+                if newtx == None:
+                    return prettyinput(q, default)
+                else:
+                    return spokeninputtimeout(q, default, newtx, tries)
+                
+            return val
+        except TimeoutOccurred:
+            print_divider()
+
+    if newtx != None and newtx > 30:
+        Dispatch("SAPI.SpVoice").Speak('Defaulted to '+default)
+
+    return default
+
+# ---------------
+
 
 
 def globber(ex, method = 'name asc'):
@@ -221,17 +306,7 @@ def preview_file(fname):
         except Exception as e: 
             print('Exception opening file with pygame')
             print(e)
-            
-            try:
-            
-                print("Opening AUDIO with playsound: ")
-                print(" ", fname)
-                playsound(fname)
-                
-            except Exception as e: 
-                print('Exception opening file with playsound')
-                print(e)
-            
+                        
     else:
         print(exten, ' extension loading using default program')
         openfile(fname)
@@ -413,9 +488,9 @@ def pickfolder(starting, maxshow):
                 return {"action" : tmp, "folder" : os.path.abspath(dircheck)}
             elif tmp == 'quick-sort':
                 return {"action" : "quick-sort", "filter": '', "folder" : os.path.abspath(dircheck)}
-            elif tmp == 'sort':
+            elif tmp == 'sort' or tmp == 'watch-sort':
                 filter = input("Filter by filename? ")
-                return {"action" : "sort", "filter": filter, "folder" : os.path.abspath(dircheck)}
+                return {"action" : tmp, "filter": filter, "folder" : os.path.abspath(dircheck)}
             elif tmp == 'sort-dirs':
                 filter = input("Filter by folder name? ")           
                 return {"action" : "sort-dirs", "filter": filter, "folder" : os.path.abspath(dircheck)}
@@ -570,7 +645,8 @@ def sortfolder(response):
     
             
             
-    if response["action"] == 'sort' or response["action"] == 'sort-dirs' or response["action"] == 'quick-sort':
+    if response["action"] == 'sort' or response["action"] == 'sort-dirs' or response["action"] == 'quick-sort' or response["action"] == 'watch-sort':
+    
         globpattern = dircheck + "/*" + response["filter"] + '*'
     
         for file in globber(globpattern, 'ask'):
@@ -879,6 +955,22 @@ def sortfile(response, file):
         
         return {"action": "moved", "folder": newpath, "file": newfilelocation}
 
+    elif response['action'] == 'watch-sort':
+    
+        if os.path.isfile(file) == False:
+            return {"action": "", "folder": newpath, "file": file}
+        
+        if spokeninputtimeout(pathlib.Path(file).stem + ' - Do you want to play this file? ', 'n', 600, 3) == 'y':
+            openfile(file)
+                        
+            return sortfile({"action": "sort", "folder": response["folder"]}, file)
+        else:
+
+            nowatchpath = makenewdir(response["folder"] + '/not-picked')
+            newfilelocation = movefile(file, nowatchpath)
+        
+            return {"action": "moved", "folder": response["folder"], "file": newfilelocation}
+
 
         
     newfilelocation = file
@@ -979,6 +1071,8 @@ def makenewdir(newpath):
         os.makedirs(newpath)
         show_file_and_metadata('Created folder', newpath)
         clear_cache(pathlib.Path(newpath).parent.stem)
+        
+    return newpath
 
 
 def openfile(filename):
