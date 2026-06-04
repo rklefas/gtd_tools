@@ -1033,7 +1033,7 @@ def lineitem(key, value):
     linex = key.rjust(17, " ") + " | " + value
         
     print(linex[:columns])
-    sleep(0.01)
+    sleep(0.005)
 
 
 def linedivider():
@@ -1116,9 +1116,11 @@ def movefile(current, dest):
     
     try:
         if os.path.isdir(dest):
+            confirmation('Folder with the same name already exists')
             dest = dest + '/' + pathlib.Path(current).name + '-conflict-' + str(random.randrange(1000,9999))
 
         if os.path.isfile(dest):
+            confirmation('File with the same name already exists')
             dest = dest + '-' + str(random.randrange(1000,9999)) + '.duplicate'
 
         linedivider()
@@ -1141,6 +1143,7 @@ def movefile(current, dest):
         
     except Exception as e: 
         print(e)
+        confirmation('The program has recovered from an exception')
 
 
 # ---------------
