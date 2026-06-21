@@ -40,7 +40,12 @@ def create_parser():
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Move files (default is dry-run: print planned moves only)",
+        help="Move files without prompting",
+    )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Prompt before moving each file",
     )
     parser.add_argument(
         "--include-hidden",
@@ -95,7 +100,7 @@ def match_dest_folder(working_dir, name, target_folders):
 
         bestMatch = sortedCountMap[0]
 
-        if bestMatch[1] > 0:
+        if bestMatch[1] > 1:
             print("  Best Match: %s/" % (bestMatch[0]))
             print("  Score:      %d" % (bestMatch[1]))
             return bestMatch[0]
@@ -146,7 +151,15 @@ def try_file_move(working_dir, name, dest_folder, args):
 
     print("%s -> %s" % (name, dest_folder))
 
+    movement = False
+
     if args.apply:
+        movement = True
+    elif args.interactive:
+        if input("Move? [y/N] ").strip().lower() == 'y':
+            movement = True
+
+    if movement:
         if not os.path.isdir(dest_dir):
             os.makedirs(dest_dir)
         shutil.move(src, dest)
