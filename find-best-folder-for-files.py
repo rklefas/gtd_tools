@@ -81,16 +81,43 @@ def discover_subfolder_match_targets(working_dir, args):
 
 def match_dest_folder(name, target_folders):
     stem, _ext = os.path.splitext(name)
-    hay = alpha_only(stem)
-    for folder_name, needle in target_folders:
-        if needle in hay:
-            return folder_name
+    countMap = {}
+
+    print("Checking for: %s" % (name,))
+
+    for folder_name, folder_slug in target_folders:
+        countMap[folder_name] = calculate_match_score(folder_name, stem)
+
+    sortedCountMap = sorted(countMap.items(), key=lambda x: (-x[1], x[0].lower()))
+    bestMatch = None
+
+    if sortedCountMap[0]:
+
+        bestMatch = sortedCountMap[0]
+
+        if bestMatch[1] > 0:
+            print("  Best Match: %s/" % (bestMatch[0]))
+            print("  Score:      %d" % (bestMatch[1]))
+            return bestMatch[0]
+
+    print("  No folder name match")
     return None
+
+
+def calculate_match_score(folder_name, file_stem):
+
+    folder_slug = alpha_only(folder_name)
+    file_slug = alpha_only(file_stem)
+
+    if folder_slug in file_slug:
+        return 1
+    else:
+        return 0
+
 
 
 def try_file_move(working_dir, name, dest_folder, args):
     if dest_folder is None:
-        print("Skip (no folder name match): %s" % (name,))
         return 0
 
     src = os.path.join(working_dir, name)
@@ -112,9 +139,17 @@ def try_file_move(working_dir, name, dest_folder, args):
 
 
 def group_files_in_working_dir(working_dir, args):
+
     script_name = os.path.basename(os.path.abspath(__file__))
     target_folders = discover_subfolder_match_targets(working_dir, args)
     move_count = 0
+
+    print("")
+    print("Working Directory: %s" % working_dir)
+    print("  Items: %d" % len(os.listdir(working_dir)))
+    print("  Folders: %d" % len(target_folders))
+    print("")
+
     for name in sorted(os.listdir(working_dir)):
 
         if name == script_name:
@@ -128,6 +163,8 @@ def group_files_in_working_dir(working_dir, args):
         dest_folder = match_dest_folder(name, target_folders)
         move_count += try_file_move(working_dir, name, dest_folder, args)
 
+    print("")
+
     if not args.apply:
         print(
             "Dry run: %d file(s) would move. No files moved. Use --apply to move files."
@@ -135,6 +172,8 @@ def group_files_in_working_dir(working_dir, args):
         )
     else:
         print("Moved %d file(s)." % move_count)
+
+    print("")
 
 
 def main():
