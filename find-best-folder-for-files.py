@@ -79,14 +79,14 @@ def discover_subfolder_match_targets(working_dir, args):
     return rows
 
 
-def match_dest_folder(name, target_folders):
+def match_dest_folder(working_dir, name, target_folders):
     stem, _ext = os.path.splitext(name)
     countMap = {}
 
     print("Checking for: %s" % (name,))
 
     for folder_name, folder_slug in target_folders:
-        countMap[folder_name] = calculate_match_score(folder_name, stem)
+        countMap[folder_name] = calculate_match_score(working_dir,folder_name, stem)
 
     sortedCountMap = sorted(countMap.items(), key=lambda x: (-x[1], x[0].lower()))
     bestMatch = None
@@ -104,15 +104,29 @@ def match_dest_folder(name, target_folders):
     return None
 
 
-def calculate_match_score(folder_name, file_stem):
+def calculate_match_score(working_dir, folder_name, file_stem):
 
     folder_slug = alpha_only(folder_name)
     file_slug = alpha_only(file_stem)
+    matchScore = 0
 
     if folder_slug in file_slug:
-        return 1
-    else:
-        return 0
+        print("  Match on folder: %s/" % (folder_name,))
+        matchScore += 10
+
+    path = os.path.join(working_dir, folder_name)
+    subfiles = sorted(os.listdir(path))
+
+    for name in subfiles:
+        name_slug = alpha_only(name)
+        parts = file_slug.split(' ')
+
+        for part in parts:
+            if part and part in name_slug:
+                print("  Match on file: %s" % (name_slug,))
+                matchScore += 1
+
+    return matchScore
 
 
 
@@ -131,10 +145,12 @@ def try_file_move(working_dir, name, dest_folder, args):
         return 0
 
     print("%s -> %s" % (name, dest_folder))
+
     if args.apply:
         if not os.path.isdir(dest_dir):
             os.makedirs(dest_dir)
         shutil.move(src, dest)
+
     return 1
 
 
@@ -154,13 +170,15 @@ def group_files_in_working_dir(working_dir, args):
 
         if name == script_name:
             continue
+        if name == 'Thumbs.db':
+            continue
         path = os.path.join(working_dir, name)
         if not os.path.isfile(path):
             continue
         if not args.include_hidden and name.startswith("."):
             continue
 
-        dest_folder = match_dest_folder(name, target_folders)
+        dest_folder = match_dest_folder(working_dir, name, target_folders)
         move_count += try_file_move(working_dir, name, dest_folder, args)
 
     print("")
