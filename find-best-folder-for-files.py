@@ -9,6 +9,7 @@
 from __future__ import print_function
 
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -21,6 +22,31 @@ class GroupFilesError(Exception):
 def alpha_only(s):
     # Letters only, lowercased (Unicode isalpha).
     return "".join(c.lower() for c in s if c.isalpha())
+
+
+def load_life_domain_keywords():
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(project_dir, "life-domains.json")
+    with open(json_path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    if isinstance(data, dict):
+        return {
+            str(folder_name): [
+                keyword for keyword in keywords if isinstance(keyword, str)
+            ]
+            for folder_name, keywords in data.items()
+            if isinstance(keywords, list)
+        }
+
+    if isinstance(data, list):
+        return {
+            str(index): [keyword for keyword in keywords if isinstance(keyword, str)]
+            for index, keywords in enumerate(data)
+            if isinstance(keywords, list)
+        }
+
+    raise GroupFilesError("Unexpected structure in %s" % json_path)
 
 
 def create_parser():
@@ -115,9 +141,20 @@ def calculate_match_score(working_dir, folder_name, file_stem):
     file_slug = alpha_only(file_stem)
     matchScore = 0
 
+#    print("  File Slug: %s/" % (file_slug,))
+
     if folder_slug in file_slug:
         print("  Match on folder: %s/" % (folder_name,))
         matchScore += 10
+
+    life_domain_keywords = load_life_domain_keywords()
+    folder_keywords = life_domain_keywords.get(folder_name, [])
+
+    for keyword in folder_keywords:
+        keyword_slug = alpha_only(keyword)
+        if keyword_slug and keyword_slug in file_slug:
+            print("  Match on keyword: %s" % (keyword,))
+            matchScore += 5
 
     path = os.path.join(working_dir, folder_name)
     subfiles = sorted(os.listdir(path))

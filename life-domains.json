@@ -1,0 +1,47 @@
+{
+    "spirit": [
+        "emotion",
+        "energy",
+        "memory",
+        "mental",
+        "soul",
+        "thought",
+        "vitality",
+        "purpose",
+        "buddha",
+        "psychology",
+        "excorcist",
+        "sacred"
+    ],
+    "health": [
+        "body",
+        "energy",
+        "memory",
+        "fitness",
+        "nutrition",
+        "herbs",
+        "diet",
+        "digestion"
+    ],
+    "finances": [
+        "career",
+        "capitalist",
+        "income",
+        "investing",
+        "money",
+        "retirement",
+        "saving"
+    ],
+    "places": [
+        "travel",
+        ""
+    ],
+    "people": [
+        "dating",
+        "family",
+        "friends",
+        "networking",
+        "relationships",
+        "colleagues"
+    ]
+}
