@@ -158,6 +158,11 @@ def try_file_move(working_dir, name, dest_folder, args):
     elif args.interactive:
         if input("Move? [y/N] ").strip().lower() == 'y':
             movement = True
+        else:
+            movement = True
+            dest_dir = os.path.join(working_dir, 'invalid-matches')
+            dest = os.path.join(dest_dir, name)
+            print("Marked as invalid match.")
 
     if movement:
         if not os.path.isdir(dest_dir):
@@ -172,13 +177,10 @@ def group_files_in_working_dir(working_dir, args):
     script_name = os.path.basename(os.path.abspath(__file__))
     target_folders = discover_subfolder_match_targets(working_dir, args)
     move_count = 0
+    file_count = 0
 
     print("")
-    print("Working Directory: %s" % working_dir)
-    print("  Items: %d" % len(os.listdir(working_dir)))
-    print("  Folders: %d" % len(target_folders))
-    print("")
-
+    
     for name in sorted(os.listdir(working_dir)):
 
         if name == script_name:
@@ -193,7 +195,12 @@ def group_files_in_working_dir(working_dir, args):
 
         dest_folder = match_dest_folder(working_dir, name, target_folders)
         move_count += try_file_move(working_dir, name, dest_folder, args)
+        file_count += 1
 
+    print("")
+    print("Working Directory: %s" % working_dir)
+    print("  Folders: %d" % len(target_folders))
+    print("  Files: %d" % file_count)
     print("")
 
     if not args.apply:
