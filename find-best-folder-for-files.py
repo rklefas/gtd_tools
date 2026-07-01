@@ -39,13 +39,6 @@ def load_life_domain_keywords():
             if isinstance(keywords, list)
         }
 
-    if isinstance(data, list):
-        return {
-            str(index): [keyword for keyword in keywords if isinstance(keyword, str)]
-            for index, keywords in enumerate(data)
-            if isinstance(keywords, list)
-        }
-
     raise GroupFilesError("Unexpected structure in %s" % json_path)
 
 
@@ -145,7 +138,7 @@ def calculate_match_score(working_dir, folder_name, file_stem):
 
     if folder_slug in file_slug:
         print("  Match on folder: %s/" % (folder_name,))
-        matchScore += 10
+        matchScore += len(folder_slug)
 
     life_domain_keywords = load_life_domain_keywords()
     folder_keywords = life_domain_keywords.get(folder_name, [])
@@ -154,7 +147,7 @@ def calculate_match_score(working_dir, folder_name, file_stem):
         keyword_slug = alpha_only(keyword)
         if keyword_slug and keyword_slug in file_slug:
             print("  Match on keyword: %s" % (keyword,))
-            matchScore += 5
+            matchScore += len(keyword_slug)
 
     path = os.path.join(working_dir, folder_name)
     subfiles = sorted(os.listdir(path))
