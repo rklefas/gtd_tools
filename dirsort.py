@@ -166,6 +166,16 @@ def pushdate_size(filename):
     delayed = parse_delaytime(filename)
     return delayed + ' ' + str(sortvalue).rjust(20, '0')
 
+# ---------------
+
+def is_delayed(filename):
+    stem = str(pathlib.Path(filename).stem)
+    if stem[0:3] == '{20':
+        return True
+    else:
+        return False
+
+# ---------------
 
 def parse_delaytime(filename):
     stem = str(pathlib.Path(filename).stem)
@@ -174,7 +184,7 @@ def parse_delaytime(filename):
     else:
         return datetime.now().strftime("{%Y-%m-%d}")
 
-
+# ---------------
 
 def print_block(xx, block = 25):
     down = int(len(xx) / block)
@@ -546,7 +556,6 @@ def foldersummary(dircheck):
             if os.path.isfile(file):
             
                 exten = pathlib.Path(file).suffix.strip(".").lower()
-                filename = pathlib.Path(file).stem
                 value = extensions.get(exten)
         
                 if value == None:
@@ -557,7 +566,7 @@ def foldersummary(dircheck):
                 files = files + 1
                 size = size + os.path.getsize(file)
                 
-                if filename[0:3] == '{20':
+                if is_delayed(file):
                     delayed = delayed + 1
                 
             elif os.path.isdir(file):
