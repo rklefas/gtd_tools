@@ -13,15 +13,35 @@ import json
 import os
 import shutil
 import sys
+from datetime import datetime
 
 
 class GroupFilesError(Exception):
     """Raised when required data or environment is missing; script cannot proceed."""
 
+def write_log(message):
+    dateX = datetime.now().strftime("%Y-%m-%d")
+    timeX = datetime.now().strftime(" %H:%M:%S")
+    file1 = open('logs/' + dateX + "-best-folder.log", "a")
+    file1.write(dateX + timeX + " " + message + "\n")
+    file1.close()
+
 
 def alpha_only(s):
-    # Letters only, lowercased (Unicode isalpha).
-    return "".join(c.lower() for c in s if c.isalpha())
+    # Letters and single spaces, lowercased (Unicode isalpha).
+    result = []
+    prev_space = False
+
+    for c in s.lower():
+        if c.isalpha():
+            result.append(c)
+            prev_space = False
+        elif c.isspace():
+            if not prev_space:
+                result.append(" ")
+                prev_space = True
+
+    return "".join(result).strip()
 
 
 def load_life_domain_keywords():
@@ -197,7 +217,10 @@ def try_file_move(working_dir, name, dest_folder, args):
     if movement:
         if not os.path.isdir(dest_dir):
             os.makedirs(dest_dir)
+
+        write_log('SOURCE ' + src)
         shutil.move(src, dest)
+        write_log('  DEST ' + dest)
 
     return 1
 
