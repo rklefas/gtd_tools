@@ -22,7 +22,35 @@
         "astrology",
         "kundalini",
         "getting things done",
-        "gtd"
+        "gtd",
+        "productivity",
+        "goals",
+        "hermetic",
+        "religion",
+        "personality",
+        "morning routine",
+        "discipline",
+        "scripture",
+        "scriptural",
+        "music",
+        "feeling",
+        "gnosis",
+        "gnostic",
+        "personalities",
+        "christian",
+        "church",
+        "muslim",
+        "islam",
+        "sufi",
+        "sagittarius",
+        "aries",
+        "gemini",
+        "scorpio",
+        "prophecy",
+        "theosophical society",
+        "theosophy",
+        "witchcraft",
+        "soundtrack"
     ],
     "health": [
         "body",
@@ -56,13 +84,22 @@
         "breakfast",
         "fasting",
         "oil",
-        "eat",
+        "protein",
+        "amino acid",
         "dessert",
         "coffee",
         "recipe",
         "blood",
         "restaurant",
-        "holistic"
+        "holistic",
+        "skincare",
+        "ingredient",
+        "steak",
+        "corn",
+        "chicken",
+        "turkey",
+        "oatmeal",
+        "bread"
     ],
     "finances": [
         "career",
@@ -81,7 +118,19 @@
         "wealth",
         "operating system",
         "bank",
-        "banking"
+        "banking",
+        "unix",
+        "linux",
+        "windows",
+        "great depression",
+        "economy",
+        "economic",
+        "resume",
+        "finance",
+        "market",
+        "work from home",
+        "productize",
+        "business model"
     ],
     "places": [
         "travel",
@@ -93,7 +142,9 @@
         "Australia",
         "Antarctica",
         "downtown",
-        "countryside"
+        "countryside",
+        "mall",
+        "architecture"
     ],
     "people": [
         "dating",
@@ -111,7 +162,13 @@
         "black pill",
         "conversation",
         "politics",
+        "political",
         "memoir",
-        "biography"
+        "biography",
+        "others",
+        "singles",
+        "single men",
+        "single women",
+        "attractive"
     ]
 }
