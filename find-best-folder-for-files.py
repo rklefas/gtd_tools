@@ -22,9 +22,12 @@ class GroupFilesError(Exception):
 def write_log(message):
     dateX = datetime.now().strftime("%Y-%m-%d")
     timeX = datetime.now().strftime(" %H:%M:%S")
-    file1 = open('logs/' + dateX + "-best-folder.log", "a")
-    file1.write(dateX + timeX + " " + message + "\n")
-    file1.close()
+    try:
+        file1 = open('logs/' + dateX + "-best-folder.log", "a")
+        file1.write(dateX + timeX + " " + message + "\n")
+        file1.close()
+    except Exception:
+        print(Exception)
 
 
 def alpha_only(s):
@@ -116,10 +119,23 @@ def discover_subfolder_match_targets(working_dir, args):
         rows.append((name, needle))
     rows.sort(key=lambda r: (-len(r[1]), r[0].lower()))
     if not rows:
+        life_domain_keywords = load_life_domain_keywords()
+        for folder_name in life_domain_keywords:
+            folder_path = os.path.join(working_dir, folder_name)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+                print('Created:', folder_path)
+            needle = alpha_only(folder_name)
+            if needle:
+                rows.append((folder_name, needle))
+
+        rows.sort(key=lambda r: (-len(r[1]), r[0].lower()))
+
         raise GroupFilesError(
-            "No subdirectories with letters in their names under %s; nothing to match."
+            "No subdirectories were found under %s; created default folders from life-domains.json."
             % working_dir
         )
+
     return rows
 
 
